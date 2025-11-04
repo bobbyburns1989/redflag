@@ -1,4 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permissions for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Permissions for emergency call functionality -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+
     <application
         android:label="safety_app"
         android:name="${applicationName}"
