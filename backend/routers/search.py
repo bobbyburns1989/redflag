@@ -11,7 +11,7 @@ def get_offender_service():
 
 class SearchRequest(BaseModel):
     firstName: str
-    lastName: Optional[str] = None
+    lastName: str
     phoneNumber: Optional[str] = None
     zipCode: Optional[str] = None
 

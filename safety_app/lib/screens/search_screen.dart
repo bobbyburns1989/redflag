@@ -45,9 +45,7 @@ class _SearchScreenState extends State<SearchScreen> {
       final apiService = ApiService();
       final result = await apiService.searchByName(
         firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim().isEmpty
-            ? null
-            : _lastNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         phoneNumber: _phoneController.text.trim().isEmpty
             ? null
             : _phoneController.text.trim(),
@@ -204,16 +202,25 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Last name field (optional)
+                // Last name field (required)
                 TextFormField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(
-                    labelText: 'Last Name (Optional)',
+                    labelText: 'Last Name *',
                     hintText: 'Enter last name',
                     prefixIcon: Icon(Icons.person_outline),
                     border: OutlineInputBorder(),
                   ),
                   textCapitalization: TextCapitalization.words,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Last name is required';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'Last name must be at least 2 characters';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -267,7 +274,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                 // Helper text
                 Text(
-                  '* Required field',
+                  '* Required fields',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,

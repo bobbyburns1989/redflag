@@ -75,13 +75,15 @@ Access to public safety information should be easy, anonymous, and ethically gui
 - **Ethical use guidelines** emphasized throughout
 
 ### 2. 🔍 Smart Search
-- **Required**: First name (minimum 2 characters)
+- **Required**:
+  - First name (minimum 2 characters)
+  - Last name (minimum 2 characters)
 - **Optional Filters**:
-  - Last name
   - Phone number (10+ digits)
   - ZIP code (5 digits) for distance calculation
 - **Real-time validation** with helpful error messages
 - **Loading states** for better UX
+- **Note**: Both first and last names are required to improve search accuracy and reduce false positives
 
 ### 3. 📋 Results Display
 - **Clean card-based UI** for each potential match
@@ -199,7 +201,7 @@ flutter run -d <device-id>
 
 1. **Backend**: Visit http://localhost:8000 - should see API info
 2. **Flutter App**: Should open with onboarding screen
-3. **Test Search**: Complete onboarding, try searching for "John"
+3. **Test Search**: Complete onboarding, try searching for "John Smith" (both names required)
 
 ## 🏗️ Architecture
 
@@ -336,7 +338,7 @@ curl http://localhost:8000/health
 # Test search endpoint
 curl -X POST http://localhost:8000/api/search/name \
   -H "Content-Type: application/json" \
-  -d '{"firstName":"John"}'
+  -d '{"firstName":"John","lastName":"Smith"}'
 
 # Should return JSON array of results
 ```
@@ -582,8 +584,9 @@ flutter run
 **Problem:** Empty search results
 
 - This is normal if no matches found
-- Try common names like "John", "Michael", "David"
+- Try common full names like "John Smith", "Michael Johnson", "David Williams"
 - Check backend logs: `cat backend/backend.log`
+- Remember: Both first and last names are required for searches
 
 **Problem:** Network errors from Flutter app
 
