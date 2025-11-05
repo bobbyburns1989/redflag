@@ -75,6 +75,7 @@ Access to public safety information should be easy, anonymous, and ethically gui
 - **Ethical use guidelines** emphasized throughout
 
 ### 2. 🔍 Smart Search
+- **Optimized Single-Screen Layout**: Entire form fits on one screen without scrolling
 - **Required**:
   - First name (minimum 2 characters)
   - Last name (minimum 2 characters)
@@ -84,6 +85,7 @@ Access to public safety information should be easy, anonymous, and ethically gui
   - Phone number (10+ digits)
   - ZIP code (5 digits) for distance calculation
 - **Real-time validation** with helpful error messages
+- **Compact design** with reduced spacing and hidden character counters
 - **Loading states** for better UX
 - **Note**: Both first and last names are required to improve search accuracy and reduce false positives
 

@@ -155,42 +155,41 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Disclaimer card
-                Card(
-                  color: AppColors.lightPink,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: AppColors.softPink, width: 1),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: AppColors.deepPink),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Search results are potential matches only. Always verify independently.',
-                            style: TextStyle(
-                              color: AppColors.deepPink,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Disclaimer card
+              Card(
+                color: AppColors.lightPink,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: AppColors.softPink, width: 1),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: AppColors.deepPink, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Search results are potential matches only. Always verify independently.',
+                          style: TextStyle(
+                            color: AppColors.deepPink,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
+              ),
+              const SizedBox(height: 12),
 
                 // First name field (required)
                 TextFormField(
@@ -212,7 +211,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // Last name field (required)
                 TextFormField(
@@ -234,7 +233,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // Age field (optional)
                 TextFormField(
@@ -244,6 +243,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     hintText: 'Enter age',
                     prefixIcon: Icon(Icons.cake),
                     border: OutlineInputBorder(),
+                    counterText: '',
                   ),
                   keyboardType: TextInputType.number,
                   maxLength: 3,
@@ -257,7 +257,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // State field (optional)
                 TextFormField(
@@ -267,6 +267,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     hintText: 'e.g., CA, NY, TX',
                     prefixIcon: Icon(Icons.map),
                     border: OutlineInputBorder(),
+                    counterText: '',
                   ),
                   textCapitalization: TextCapitalization.characters,
                   maxLength: 2,
@@ -282,7 +283,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // Phone number field (optional)
                 TextFormField(
@@ -305,7 +306,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // ZIP code field (optional)
                 TextFormField(
@@ -315,6 +316,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     hintText: 'Enter ZIP code',
                     prefixIcon: Icon(Icons.location_on),
                     border: OutlineInputBorder(),
+                    counterText: '',
                   ),
                   keyboardType: TextInputType.number,
                   maxLength: 5,
@@ -330,17 +332,17 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 // Helper text
                 Text(
                   '* Required fields',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.grey.shade600,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 // Error message
                 if (_errorMessage != null)
@@ -369,30 +371,30 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
-                if (_errorMessage != null) const SizedBox(height: 16),
+                if (_errorMessage != null) const SizedBox(height: 10),
 
                 // Search button
                 Container(
                   decoration: BoxDecoration(
                     gradient: _isLoading ? null : AppColors.pinkGradient,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: _isLoading ? [] : AppColors.softPinkShadow,
                   ),
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _performSearch,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       backgroundColor: _isLoading ? AppColors.lightPink : Colors.transparent,
                       foregroundColor: Colors.white,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: _isLoading
                         ? SizedBox(
-                            height: 20,
-                            width: 20,
+                            height: 18,
+                            width: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
@@ -402,29 +404,29 @@ class _SearchScreenState extends State<SearchScreen> {
                         : const Text(
                             'Search Registry',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // Clear button
                 OutlinedButton(
                   onPressed: _isLoading ? null : _clearForm,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: AppColors.primaryPink, width: 2),
                     foregroundColor: AppColors.primaryPink,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
                     'Clear Form',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
