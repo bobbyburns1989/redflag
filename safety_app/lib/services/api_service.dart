@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/offender.dart';
 import '../models/search_result.dart';
@@ -36,7 +37,7 @@ class ApiService {
           )
           .timeout(
             const Duration(seconds: 30),
-            onTimeout: () => throw ApiException('Request timed out'),
+            onTimeout: () => throw TimeoutException('Search request timed out. Please check your connection and try again.'),
           );
 
       if (response.statusCode == 200) {
@@ -54,16 +55,24 @@ class ApiService {
           timestamp: DateTime.now(),
           totalResults: 0,
         );
+      } else if (response.statusCode >= 500) {
+        throw ServerException('Server error. Please try again later.');
       } else {
         throw ApiException(
-          'Search failed with status ${response.statusCode}: ${response.body}',
+          'Search failed. Please check your connection and try again.',
         );
       }
+    } on SocketException {
+      throw NetworkException('No internet connection. Please check your network settings.');
+    } on TimeoutException {
+      rethrow;
+    } on ServerException {
+      rethrow;
     } on http.ClientException catch (e) {
-      throw ApiException('Network error: ${e.message}');
+      throw NetworkException('Connection failed: ${e.message}');
     } catch (e) {
       if (e is ApiException) rethrow;
-      throw ApiException('Unexpected error: ${e.toString()}');
+      throw ApiException('Unexpected error occurred. Please try again.');
     }
   }
 
@@ -104,4 +113,28 @@ class ApiException implements Exception {
 
   @override
   String toString() => 'ApiException: $message';
+}
+
+/// Network connectivity exception
+class NetworkException extends ApiException {
+  NetworkException(super.message);
+
+  @override
+  String toString() => 'NetworkException: $message';
+}
+
+/// Server error exception
+class ServerException extends ApiException {
+  ServerException(super.message);
+
+  @override
+  String toString() => 'ServerException: $message';
+}
+
+/// Timeout exception
+class TimeoutException extends ApiException {
+  TimeoutException(super.message);
+
+  @override
+  String toString() => 'TimeoutException: $message';
 }

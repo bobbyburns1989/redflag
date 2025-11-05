@@ -57,6 +57,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
       if (!mounted) return;
 
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -64,13 +73,39 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       );
     } on ApiException catch (e) {
-      setState(() {
-        _errorMessage = e.message;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.message;
+        });
+
+        // Show error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _performSearch,
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An unexpected error occurred. Please try again.';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('An unexpected error occurred'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
