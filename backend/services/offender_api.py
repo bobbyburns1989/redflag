@@ -14,7 +14,7 @@ class OffenderAPIService:
     def __init__(self):
         self.offenders_io_key = os.getenv("OFFENDERS_IO_API_KEY")
         self.crimeometer_key = os.getenv("CRIMEOMETER_API_KEY")
-        self.base_url_offenders_io = "https://api.offenders.io/v1"
+        self.base_url_offenders_io = "https://api.offenders.io"
         self.base_url_crimeometer = "https://api.crimeometer.com/v1"
 
     async def search_by_name(
@@ -71,29 +71,35 @@ class OffenderAPIService:
     ) -> List[Dict[str, Any]]:
         """Query Offenders.io API"""
 
+        # Build params with camelCase naming as per API docs
         params = {
-            "first_name": first_name,
+            "firstName": first_name,
+            "key": self.offenders_io_key,  # API key as query param
         }
 
         if last_name:
-            params["last_name"] = last_name
+            params["lastName"] = last_name
         if zip_code:
-            params["zip_code"] = zip_code
+            params["zipcode"] = zip_code
 
         headers = {
-            "x-api-key": self.offenders_io_key,
             "Content-Type": "application/json"
         }
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url_offenders_io}/offenders/search",
+                f"{self.base_url_offenders_io}/sexoffender",
                 params=params,
                 headers=headers,
                 timeout=10.0
             )
             response.raise_for_status()
             data = response.json()
+
+            # Debug logging
+            print(f"Offenders.io response: {len(data.get('offenders', []))} results")
+            if data.get('offenders'):
+                print(f"Sample result: {data['offenders'][0].get('name', 'N/A')}")
 
             # Transform to standard format
             return self._transform_offenders_io_response(data)
@@ -136,16 +142,26 @@ class OffenderAPIService:
         offenders = data.get("offenders", [])
 
         for offender in offenders:
+            # Parse age from string to int if possible
+            age = offender.get("age")
+            if age and isinstance(age, str) and age.strip():
+                try:
+                    age = int(age)
+                except (ValueError, TypeError):
+                    age = None
+            else:
+                age = None
+
             results.append({
-                "id": offender.get("id", ""),
-                "fullName": f"{offender.get('first_name', '')} {offender.get('last_name', '')}".strip(),
-                "age": offender.get("age"),
+                "id": offender.get("uuid", ""),
+                "fullName": offender.get("name", ""),
+                "age": age,
                 "city": offender.get("city"),
                 "state": offender.get("state"),
-                "offenseDescription": offender.get("offense_description"),
-                "registrationDate": offender.get("registration_date"),
-                "distance": offender.get("distance"),
-                "address": f"{offender.get('city', '')}, {offender.get('state', '')}"
+                "offenseDescription": offender.get("crime"),
+                "registrationDate": offender.get("registrationDate"),
+                "distance": None,  # Can calculate if needed
+                "address": offender.get("address", f"{offender.get('city', '')}, {offender.get('state', '')}")
             })
 
         return results
