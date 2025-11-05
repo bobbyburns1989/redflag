@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/resources_screen.dart';
+import 'theme/app_colors.dart';
 
 void main() {
   runApp(const SafetyApp());
@@ -16,13 +17,30 @@ class SafetyApp extends StatelessWidget {
       title: 'Safety First',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: AppColors.primaryPink,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.softWhite,
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.primaryPink, width: 2),
+          ),
         ),
       ),
       // Start with onboarding screen
@@ -75,8 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Resources',
           ),
         ],
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primaryPink,
+        unselectedItemColor: AppColors.mediumText,
       ),
     );
   }

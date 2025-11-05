@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/search_result.dart';
+import '../theme/app_colors.dart';
 import 'results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -61,8 +62,10 @@ class _SearchScreenState extends State<SearchScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.primaryPink,
           duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
 
@@ -82,8 +85,10 @@ class _SearchScreenState extends State<SearchScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.deepPink,
             duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             action: SnackBarAction(
               label: 'Retry',
               textColor: Colors.white,
@@ -101,8 +106,10 @@ class _SearchScreenState extends State<SearchScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('An unexpected error occurred'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.deepPink,
             duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -131,7 +138,11 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search Registry'),
-        backgroundColor: Colors.blue,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.appBarGradient,
+          ),
+        ),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -144,19 +155,24 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 // Disclaimer card
                 Card(
-                  color: Colors.orange.shade50,
+                  color: AppColors.lightPink,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.softPink, width: 1),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.orange.shade700),
+                        Icon(Icons.info_outline, color: AppColors.deepPink),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Search results are potential matches only. Always verify independently.',
                             style: TextStyle(
-                              color: Colors.orange.shade900,
+                              color: AppColors.deepPink,
                               fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -262,17 +278,24 @@ class _SearchScreenState extends State<SearchScreen> {
                 // Error message
                 if (_errorMessage != null)
                   Card(
-                    color: Colors.red.shade50,
+                    color: AppColors.errorRose,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: AppColors.rose, width: 1),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          Icon(Icons.error_outline, color: AppColors.deepPink),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade900),
+                              style: TextStyle(
+                                color: AppColors.deepPink,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -282,28 +305,41 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (_errorMessage != null) const SizedBox(height: 16),
 
                 // Search button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _performSearch,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey.shade300,
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: _isLoading ? null : AppColors.pinkGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: _isLoading ? [] : AppColors.softPinkShadow,
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _performSearch,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: _isLoading ? AppColors.lightPink : Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(AppColors.primaryPink),
+                            ),
+                          )
+                        : const Text(
+                            'Search Registry',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : const Text(
-                          'Search Registry',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -312,10 +348,18 @@ class _SearchScreenState extends State<SearchScreen> {
                   onPressed: _isLoading ? null : _clearForm,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: AppColors.primaryPink, width: 2),
+                    foregroundColor: AppColors.primaryPink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: const Text(
                     'Clear Form',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

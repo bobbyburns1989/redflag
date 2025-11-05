@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/offender.dart';
+import '../theme/app_colors.dart';
 
 class OffenderCard extends StatelessWidget {
   final Offender offender;
@@ -14,9 +15,10 @@ class OffenderCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 3,
+      color: AppColors.softWhite,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.red.shade100, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.softPink, width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -29,12 +31,19 @@ class OffenderCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade100,
+                    gradient: AppColors.pinkGradient,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryPink.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.person,
-                    color: Colors.red.shade700,
+                    color: Colors.white,
                     size: 26,
                   ),
                 ),
@@ -108,20 +117,20 @@ class OffenderCard extends StatelessWidget {
             ],
 
             // Disclaimer
-            const Divider(height: 28, thickness: 1),
+            const Divider(height: 28, thickness: 1, color: AppColors.softPink),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                color: AppColors.lightPink,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.rose, width: 1.5),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.info_outline,
                     size: 18,
-                    color: Colors.orange.shade700,
+                    color: AppColors.deepPink,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -129,8 +138,8 @@ class OffenderCard extends StatelessWidget {
                       'Verify this information through official channels',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.orange.shade900,
-                        fontWeight: FontWeight.w500,
+                        color: AppColors.deepPink,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -149,7 +158,7 @@ class OffenderCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 22, color: Colors.grey.shade700),
+          Icon(icon, size: 22, color: AppColors.primaryPink),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

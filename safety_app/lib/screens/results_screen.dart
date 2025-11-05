@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/search_result.dart';
 import '../widgets/offender_card.dart';
+import '../theme/app_colors.dart';
 
 class ResultsScreen extends StatelessWidget {
   final SearchResult searchResult;
@@ -15,7 +16,11 @@ class ResultsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search Results'),
-        backgroundColor: Colors.blue,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.appBarGradient,
+          ),
+        ),
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -52,21 +57,21 @@ class ResultsScreen extends StatelessWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              color: AppColors.warningRose,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.rose, width: 1.5),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning, color: Colors.red.shade700),
+                Icon(Icons.warning, color: AppColors.deepPink),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'These are potential matches only. Names may belong to different people. Verify independently.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.red.shade900,
-                      fontWeight: FontWeight.w500,
+                      color: AppColors.deepPink,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -101,16 +106,30 @@ class ResultsScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.pinkGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: AppColors.softPinkShadow,
           ),
-          child: const Text(
-            'New Search',
-            style: TextStyle(fontSize: 16),
+          child: ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'New Search',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
