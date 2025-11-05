@@ -22,6 +22,10 @@
 - [Contributing](#-contributing)
 - [License](#-license)
 
+---
+
+> 📘 **For Developers**: See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for comprehensive onboarding, architecture details, and context for starting new sessions.
+
 ## 🎯 Project Overview
 
 Pink Flag empowers women with access to public sex offender registry information through a user-friendly, anonymous mobile application. Stay Safe, Stay Aware.
