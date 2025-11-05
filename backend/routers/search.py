@@ -4,7 +4,10 @@ from typing import Optional, List
 from services.offender_api import OffenderAPIService
 
 router = APIRouter()
-offender_service = OffenderAPIService()
+
+# Lazy initialization to ensure environment variables are loaded first
+def get_offender_service():
+    return OffenderAPIService()
 
 class SearchRequest(BaseModel):
     firstName: str
@@ -31,6 +34,7 @@ async def search_by_name(request: SearchRequest):
     Returns a list of potential matches with disclaimer that these should be verified independently.
     """
     try:
+        offender_service = get_offender_service()
         results = await offender_service.search_by_name(
             first_name=request.firstName,
             last_name=request.lastName,

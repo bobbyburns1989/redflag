@@ -81,7 +81,7 @@ class OffenderAPIService:
             params["zip_code"] = zip_code
 
         headers = {
-            "Authorization": f"Bearer {self.offenders_io_key}",
+            "x-api-key": self.offenders_io_key,
             "Content-Type": "application/json"
         }
 
