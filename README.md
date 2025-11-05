@@ -1,6 +1,6 @@
-# Safety First - Women's Safety App
+# Pink Flag - Women's Safety App
 
-> A cross-platform Flutter mobile application for checking public sex offender registries through name search. Built with privacy, ethics, and personal safety in mind.
+> A cross-platform Flutter mobile application for checking public sex offender registries through name search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey)
@@ -24,7 +24,7 @@
 
 ## 🎯 Project Overview
 
-Safety First empowers women with access to public sex offender registry information through a user-friendly, anonymous mobile application.
+Pink Flag empowers women with access to public sex offender registry information through a user-friendly, anonymous mobile application. Stay Safe, Stay Aware.
 
 ### Key Principles
 
@@ -79,6 +79,8 @@ Access to public safety information should be easy, anonymous, and ethically gui
   - First name (minimum 2 characters)
   - Last name (minimum 2 characters)
 - **Optional Filters**:
+  - Age (18-120 years, filters results within 5-year range)
+  - State (2-letter state code, e.g., CA, NY, TX)
   - Phone number (10+ digits)
   - ZIP code (5 digits) for distance calculation
 - **Real-time validation** with helpful error messages
@@ -694,7 +696,7 @@ This project is licensed under the **MIT License**.
 ```
 MIT License
 
-Copyright (c) 2025 Safety First App
+Copyright (c) 2025 Pink Flag App
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

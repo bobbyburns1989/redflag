@@ -22,7 +22,9 @@ class OffenderAPIService:
         first_name: str,
         last_name: Optional[str] = None,
         phone_number: Optional[str] = None,
-        zip_code: Optional[str] = None
+        zip_code: Optional[str] = None,
+        age: Optional[str] = None,
+        state: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Search for offenders by name and optional filters.
@@ -32,6 +34,8 @@ class OffenderAPIService:
             last_name: Optional last name filter
             phone_number: Optional phone number filter
             zip_code: Optional ZIP code for location filtering
+            age: Optional age filter
+            state: Optional state filter (2-letter code)
 
         Returns:
             List of matching offender records

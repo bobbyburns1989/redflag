@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/resources_screen.dart';
 import 'theme/app_colors.dart';
 
 void main() {
-  runApp(const SafetyApp());
+  runApp(const PinkFlagApp());
 }
 
-class SafetyApp extends StatelessWidget {
-  const SafetyApp({super.key});
+class PinkFlagApp extends StatelessWidget {
+  const PinkFlagApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Safety First',
+      title: 'Pink Flag',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primaryPink,
@@ -43,10 +44,10 @@ class SafetyApp extends StatelessWidget {
           ),
         ),
       ),
-      // Start with onboarding screen
-      // In production, check if user has seen onboarding and skip if needed
-      initialRoute: '/onboarding',
+      // Start with splash screen
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/home': (context) => const HomeScreen(),
         '/search': (context) => const SearchScreen(),

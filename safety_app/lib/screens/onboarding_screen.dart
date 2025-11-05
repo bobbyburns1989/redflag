@@ -15,9 +15,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPage> _pages = [
     OnboardingPage(
       icon: Icons.security,
-      title: 'Welcome to Safety First',
+      title: 'Welcome to Pink Flag',
       description:
-          'A tool to help you check public sex offender registries by name. This app is designed for personal safety awareness.',
+          'Stay Safe, Stay Aware. A tool to help you check public sex offender registries by name. This app is designed for personal safety awareness.',
       color: AppColors.primaryPink,
     ),
     OnboardingPage(

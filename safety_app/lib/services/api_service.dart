@@ -15,6 +15,8 @@ class ApiService {
     String? lastName,
     String? phoneNumber,
     String? zipCode,
+    String? age,
+    String? state,
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/search/name');
@@ -25,6 +27,8 @@ class ApiService {
         if (phoneNumber != null && phoneNumber.isNotEmpty)
           'phoneNumber': phoneNumber,
         if (zipCode != null && zipCode.isNotEmpty) 'zipCode': zipCode,
+        if (age != null && age.isNotEmpty) 'age': age,
+        if (state != null && state.isNotEmpty) 'state': state,
       };
 
       final response = await http

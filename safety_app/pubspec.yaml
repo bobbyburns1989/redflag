@@ -1,5 +1,5 @@
-name: safety_app
-description: "A women's safety app for checking public sex offender registries."
+name: pink_flag
+description: "Pink Flag - Stay Safe, Stay Aware. A women's safety app for checking public sex offender registries."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

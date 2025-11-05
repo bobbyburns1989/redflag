@@ -14,6 +14,8 @@ class SearchRequest(BaseModel):
     lastName: str
     phoneNumber: Optional[str] = None
     zipCode: Optional[str] = None
+    age: Optional[str] = None
+    state: Optional[str] = None
 
 class OffenderResult(BaseModel):
     id: str
@@ -39,8 +41,24 @@ async def search_by_name(request: SearchRequest):
             first_name=request.firstName,
             last_name=request.lastName,
             phone_number=request.phoneNumber,
-            zip_code=request.zipCode
+            zip_code=request.zipCode,
+            age=request.age,
+            state=request.state
         )
+
+        # Post-filter by age and state if provided (since external APIs may not support these filters)
+        if request.age:
+            try:
+                target_age = int(request.age)
+                # Filter results within a 5-year range
+                results = [r for r in results if r.get('age') and abs(r['age'] - target_age) <= 5]
+            except ValueError:
+                pass  # Invalid age format, skip filtering
+
+        if request.state:
+            # Filter by state (case-insensitive)
+            results = [r for r in results if r.get('state', '').upper() == request.state.upper()]
+
         return results
     except Exception as e:
         raise HTTPException(

@@ -16,6 +16,8 @@ class _SearchScreenState extends State<SearchScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _stateController = TextEditingController();
   final _phoneController = TextEditingController();
   final _zipCodeController = TextEditingController();
 
@@ -26,6 +28,8 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _ageController.dispose();
+    _stateController.dispose();
     _phoneController.dispose();
     _zipCodeController.dispose();
     super.dispose();
@@ -52,6 +56,12 @@ class _SearchScreenState extends State<SearchScreen> {
         zipCode: _zipCodeController.text.trim().isEmpty
             ? null
             : _zipCodeController.text.trim(),
+        age: _ageController.text.trim().isEmpty
+            ? null
+            : _ageController.text.trim(),
+        state: _stateController.text.trim().isEmpty
+            ? null
+            : _stateController.text.trim(),
       );
 
       if (!mounted) return;
@@ -124,6 +134,8 @@ class _SearchScreenState extends State<SearchScreen> {
     _formKey.currentState?.reset();
     _firstNameController.clear();
     _lastNameController.clear();
+    _ageController.clear();
+    _stateController.clear();
     _phoneController.clear();
     _zipCodeController.clear();
     setState(() {
@@ -218,6 +230,54 @@ class _SearchScreenState extends State<SearchScreen> {
                     }
                     if (value.trim().length < 2) {
                       return 'Last name must be at least 2 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Age field (optional)
+                TextFormField(
+                  controller: _ageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Age (Optional)',
+                    hintText: 'Enter age',
+                    prefixIcon: Icon(Icons.cake),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  maxLength: 3,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      final age = int.tryParse(value);
+                      if (age == null || age < 18 || age > 120) {
+                        return 'Please enter a valid age (18-120)';
+                      }
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // State field (optional)
+                TextFormField(
+                  controller: _stateController,
+                  decoration: const InputDecoration(
+                    labelText: 'State (Optional)',
+                    hintText: 'e.g., CA, NY, TX',
+                    prefixIcon: Icon(Icons.map),
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  maxLength: 2,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      if (value.length != 2) {
+                        return 'State must be 2 letters';
+                      }
+                      if (!RegExp(r'^[A-Z]{2}$').hasMatch(value.toUpperCase())) {
+                        return 'Please enter valid state code';
+                      }
                     }
                     return null;
                   },
