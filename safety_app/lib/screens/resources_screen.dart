@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../theme/app_colors.dart';
 
 class ResourcesScreen extends StatelessWidget {
   const ResourcesScreen({super.key});
@@ -16,9 +17,11 @@ class ResourcesScreen extends StatelessWidget {
       } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not launch phone dialer'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: const Text('Could not launch phone dialer'),
+              backgroundColor: AppColors.deepPink,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -28,7 +31,9 @@ class ResourcesScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.deepPink,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -40,7 +45,11 @@ class ResourcesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Emergency Resources'),
-        backgroundColor: Colors.red,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.appBarGradient,
+          ),
+        ),
         foregroundColor: Colors.white,
       ),
       body: ListView(
@@ -50,8 +59,9 @@ class ResourcesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.shade700,
-              borderRadius: BorderRadius.circular(8),
+              gradient: AppColors.pinkGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppColors.pinkGlow,
             ),
             child: const Row(
               children: [
@@ -79,7 +89,7 @@ class ResourcesScreen extends StatelessWidget {
             title: 'Emergency Services',
             subtitle: 'Immediate danger or crime in progress',
             phoneNumber: '911',
-            color: Colors.red,
+            color: AppColors.deepPink,
           ),
           const SizedBox(height: 16),
 
@@ -90,7 +100,7 @@ class ResourcesScreen extends StatelessWidget {
             title: 'National Domestic Violence Hotline',
             subtitle: '24/7 confidential support for domestic violence',
             phoneNumber: '1-800-799-7233',
-            color: Colors.purple,
+            color: AppColors.primaryPink,
             additionalInfo: 'Text START to 88788',
           ),
           const SizedBox(height: 16),
@@ -102,7 +112,7 @@ class ResourcesScreen extends StatelessWidget {
             title: 'National Sexual Assault Hotline (RAINN)',
             subtitle: '24/7 confidential crisis support',
             phoneNumber: '1-800-656-4673',
-            color: Colors.teal,
+            color: AppColors.rose,
             additionalInfo: 'Free and confidential',
           ),
           const SizedBox(height: 16),
@@ -114,7 +124,7 @@ class ResourcesScreen extends StatelessWidget {
             title: 'National Suicide Prevention Lifeline',
             subtitle: '24/7 crisis support and suicide prevention',
             phoneNumber: '988',
-            color: Colors.blue,
+            color: AppColors.primaryPink,
           ),
           const SizedBox(height: 16),
 
@@ -125,23 +135,28 @@ class ResourcesScreen extends StatelessWidget {
             title: 'Crisis Text Line',
             subtitle: 'Text-based crisis support',
             phoneNumber: null,
-            color: Colors.orange,
+            color: AppColors.deepPink,
             additionalInfo: 'Text HOME to 741741',
           ),
           const SizedBox(height: 24),
 
           // Additional resources section
           Card(
+            color: AppColors.softWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: AppColors.softPink, width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Text(
+                      Icon(Icons.info_outline, color: AppColors.primaryPink),
+                      const SizedBox(width: 8),
+                      const Text(
                         'Additional Resources',
                         style: TextStyle(
                           fontSize: 18,
@@ -173,7 +188,11 @@ class ResourcesScreen extends StatelessWidget {
 
           // Safety tips
           Card(
-            color: Colors.green.shade50,
+            color: AppColors.lightPink,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: AppColors.softPink, width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -181,7 +200,7 @@ class ResourcesScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.lightbulb_outline, color: Colors.green.shade700),
+                      Icon(Icons.lightbulb_outline, color: AppColors.deepPink),
                       const SizedBox(width: 8),
                       const Text(
                         'Safety Tips',
@@ -218,11 +237,15 @@ class ResourcesScreen extends StatelessWidget {
   }) {
     return Card(
       elevation: 2,
+      color: AppColors.softWhite,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: phoneNumber != null
             ? () => _makePhoneCall(phoneNumber, context)
             : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -318,7 +341,7 @@ class ResourcesScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+          Icon(Icons.check_circle, size: 16, color: AppColors.primaryPink),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
