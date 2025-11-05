@@ -391,42 +391,49 @@ pytest tests/ -v                   # Run tests (when implemented)
 
 ## 📝 Important Notes for New Developers
 
-### 1. API Keys
+### 1. iOS Bundle Configuration
+- **Bundle ID**: `com.pinkflag.app` (configured in Xcode)
+- **Display Name**: Pink Flag (must update in Info.plist before App Store submission)
+- **App Store Category**: Lifestyle
+- **Age Rating**: 17+ (due to sex offender registry content)
+- **No special capabilities required** (no iCloud, no Push Notifications, etc.)
+
+### 2. API Keys
 - **Offenders.io API key is required** for real data
 - Get key at: https://offenders.io
 - Add to `backend/.env`: `OFFENDERS_IO_API_KEY=your_key_here`
 - **Never commit `.env` files** (already in .gitignore)
 
-### 2. Network Configuration
+### 3. Network Configuration
 - **iOS Simulator**: Use `localhost` in `api_service.dart`
 - **Android Emulator**: Use `10.0.2.2` instead of `localhost`
 - Update `safety_app/lib/services/api_service.dart:10` if needed
 
-### 3. Last Name Field
+### 4. Last Name Field
 - **Changed from optional to required** (November 2025)
 - Backend requires it: `lastName: str` (not Optional)
 - Frontend validates min 2 characters
 - Reason: Improves search accuracy, reduces false positives
 
-### 4. Age and State Filtering
+### 5. Age and State Filtering
 - **Post-filtering on backend** (not passed to external API)
 - Age: Filters results within ±5 years
 - State: Case-insensitive exact match
 - May reduce result count significantly
 
-### 5. Layout Philosophy
+### 6. Layout Philosophy
 - **Single-screen design** is critical - no scrolling
 - Use compact spacing (10px between fields)
 - Hide character counters with `counterText: ''`
 - Test on smallest supported device (iPhone SE)
 
-### 6. Color Theme
+### 7. Color Theme
 - All colors defined in `app_colors.dart`
 - Use `AppColors.primaryPink`, not hardcoded hex values
 - Gradients available: `pinkGradient`, `appBarGradient`
 - Shadows available: `softPinkShadow`
 
-### 7. Git Workflow
+### 8. Git Workflow
 - Two commits ahead of origin/main (as of Nov 2025):
   - `c01dd47`: Pink Flag rebranding + Age/State fields
   - `f07e2e3`: Single-screen layout optimization
