@@ -605,9 +605,15 @@ flutter run
   static const String _baseUrl = 'http://10.0.2.2:8000/api';
   ```
 
-**For iOS Simulator:**
-- `localhost` should work
-- Ensure backend is running
+**For iOS Simulator (Development):**
+- Production: Uses `https://pink-flag-api.fly.dev/api` (default)
+- Local dev: Change to `localhost` in api_service.dart
+- Ensure backend is running locally if testing local development
+
+**For Production:**
+- ✅ Backend deployed to Fly.io: https://pink-flag-api.fly.dev
+- ✅ Auto-scales and auto-wakes on requests
+- ✅ No configuration needed
 
 #### App Crashes
 
@@ -694,6 +700,11 @@ We welcome contributions that align with our ethical mission!
 - Use type hints
 - Max line length: 100 characters
 - Use `black` formatter
+
+## 📄 Legal Documents
+
+**Privacy Policy**: https://customapps.us/pinkflag/privacy
+**Terms of Service**: https://customapps.us/pinkflag/terms
 
 ## 📄 License
 

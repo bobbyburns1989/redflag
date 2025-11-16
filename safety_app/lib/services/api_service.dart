@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../models/offender.dart';
 import '../models/search_result.dart';
 
 class ApiService {
-  // Default to localhost for development
-  // In production, this should be loaded from environment variables
-  static const String _baseUrl = 'http://localhost:8000/api';
+  // Production backend URL (deployed on Fly.io)
+  // For local development, change to 'http://localhost:8000/api'
+  static const String _baseUrl = 'https://pink-flag-api.fly.dev/api';
 
   /// Search for offenders by name
   Future<SearchResult> searchByName({
@@ -34,14 +33,14 @@ class ApiService {
       final response = await http
           .post(
             uri,
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: {'Content-Type': 'application/json'},
             body: jsonEncode(requestBody),
           )
           .timeout(
             const Duration(seconds: 30),
-            onTimeout: () => throw TimeoutException('Search request timed out. Please check your connection and try again.'),
+            onTimeout: () => throw TimeoutException(
+              'Search request timed out. Please check your connection and try again.',
+            ),
           );
 
       if (response.statusCode == 200) {
@@ -67,7 +66,9 @@ class ApiService {
         );
       }
     } on SocketException {
-      throw NetworkException('No internet connection. Please check your network settings.');
+      throw NetworkException(
+        'No internet connection. Please check your network settings.',
+      );
     } on TimeoutException {
       rethrow;
     } on ServerException {
@@ -84,9 +85,7 @@ class ApiService {
   Future<bool> testConnection() async {
     try {
       final uri = Uri.parse('$_baseUrl/search/test');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       return response.statusCode == 200;
     } catch (e) {
@@ -97,10 +96,8 @@ class ApiService {
   /// Health check
   Future<bool> healthCheck() async {
     try {
-      final uri = Uri.parse('http://localhost:8000/health');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+      final uri = Uri.parse('https://pink-flag-api.fly.dev/health');
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
     } catch (e) {

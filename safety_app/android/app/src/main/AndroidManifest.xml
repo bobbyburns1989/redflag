@@ -11,7 +11,7 @@
     </queries>
 
     <application
-        android:label="safety_app"
+        android:label="PinkFlag"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

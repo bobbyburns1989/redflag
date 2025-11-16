@@ -5,10 +5,7 @@ import '../theme/app_colors.dart';
 class OffenderCard extends StatelessWidget {
   final Offender offender;
 
-  const OffenderCard({
-    super.key,
-    required this.offender,
-  });
+  const OffenderCard({super.key, required this.offender});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +32,7 @@ class OffenderCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryPink.withOpacity(0.3),
+                        color: AppColors.primaryPink.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -78,12 +75,10 @@ class OffenderCard extends StatelessWidget {
             const SizedBox(height: 18),
 
             // Location
-            if (offender.address != null) ...[
-              _buildInfoRow(
-                Icons.location_on,
-                'Location',
-                offender.address!,
-              ),
+            if (offender.address != null ||
+                offender.city != null ||
+                offender.state != null) ...[
+              _buildInfoRow(Icons.location_on, 'Location', _buildFullAddress()),
               const SizedBox(height: 8),
             ],
 
@@ -127,11 +122,7 @@ class OffenderCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: AppColors.deepPink,
-                  ),
+                  Icon(Icons.info_outline, size: 18, color: AppColors.deepPink),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -150,6 +141,30 @@ class OffenderCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildFullAddress() {
+    final parts = <String>[];
+
+    // Add street address if available
+    if (offender.address != null && offender.address!.isNotEmpty) {
+      parts.add(offender.address!);
+    }
+
+    // Build city, state line
+    final cityStateParts = <String>[];
+    if (offender.city != null && offender.city!.isNotEmpty) {
+      cityStateParts.add(offender.city!);
+    }
+    if (offender.state != null && offender.state!.isNotEmpty) {
+      cityStateParts.add(offender.state!);
+    }
+
+    if (cityStateParts.isNotEmpty) {
+      parts.add(cityStateParts.join(', '));
+    }
+
+    return parts.join('\n');
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {

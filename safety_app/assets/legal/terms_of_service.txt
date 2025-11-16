@@ -1,0 +1,221 @@
+PINK FLAG TERMS OF SERVICE
+
+Last Updated: November 10, 2025
+
+Welcome to Pink Flag. By accessing or using our app, you agree to be bound by these Terms of Service.
+
+1. ACCEPTANCE OF TERMS
+
+By creating an account or using Pink Flag, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy.
+
+2. SERVICE DESCRIPTION
+
+Pink Flag provides access to public sex offender registry information aggregated from publicly available sources. The service allows users to search for individuals in these public registries.
+
+3. ELIGIBILITY
+
+You must be at least 17 years old to use Pink Flag. By using the app, you represent that you meet this age requirement.
+
+4. USER ACCOUNTS
+
+4.1. Account Creation
+- You must provide accurate and complete information when creating an account
+- You are responsible for maintaining the security of your account credentials
+- You agree to notify us immediately of any unauthorized access
+
+4.2. Account Termination
+- You may delete your account at any time through the Settings screen
+- We reserve the right to suspend or terminate accounts that violate these terms
+- Upon termination, all your data will be permanently deleted
+
+5. CREDITS AND PURCHASES
+
+5.1. Search Credits
+- Searches require credits, which can be purchased through the app
+- Credits are non-refundable except as required by law
+- Credits do not expire
+- Credits have no cash value
+
+5.2. Pricing
+- All prices are in USD and subject to change
+- Apple's 30% commission applies to all purchases
+- Taxes may apply based on your location
+
+5.3. Refunds
+- Refund requests are handled according to Apple's App Store policies
+- Contact support@pinkflagapp.com for refund inquiries
+
+6. ACCEPTABLE USE
+
+You agree NOT to use Pink Flag for:
+
+6.1. Prohibited Activities
+- Harassment, stalking, or threatening others
+- Discrimination or hate crimes
+- Employment, credit, or housing decisions (FCRA violations)
+- Any illegal activity
+- Circumventing credit system or attempting fraud
+- Automated scraping or data harvesting
+- Creating false or misleading reports
+
+6.2. Legal Compliance
+- You must comply with all local, state, and federal laws
+- You are responsible for how you use information obtained from Pink Flag
+
+7. DATA AND PRIVACY
+
+7.1. Data Collection
+- We collect email, search history, and purchase data
+- See our Privacy Policy for complete details
+- We do not sell your personal information
+
+7.2. Search History
+- Your searches are stored in your account
+- You can delete individual searches or clear all history
+- Deleted data cannot be recovered
+
+8. DISCLAIMERS
+
+8.1. Data Accuracy
+PINK FLAG DATA IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. WE DO NOT GUARANTEE:
+
+- Accuracy of registry data
+- Completeness of search results
+- Timeliness or currency of information
+- Availability of data for all locations
+
+Registry data is sourced from public records and may contain errors, omissions, or outdated information.
+
+8.2. Verification Required
+YOU MUST INDEPENDENTLY VERIFY all information obtained through Pink Flag. DO NOT rely solely on our app for critical decisions.
+
+8.3. Not Legal Advice
+Pink Flag does not provide legal advice. Consult an attorney for legal questions about registry requirements or restrictions.
+
+9. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+
+- Pink Flag is not liable for any indirect, incidental, special, or consequential damages
+- Our total liability shall not exceed the amount you paid for the service in the past 12 months
+- We are not responsible for actions taken based on app data
+- We are not liable for third-party data inaccuracies
+
+10. INDEMNIFICATION
+
+You agree to indemnify and hold Pink Flag harmless from any claims, damages, or expenses arising from:
+
+- Your use of the service
+- Your violation of these terms
+- Your violation of any laws or third-party rights
+- Misuse of information obtained through the app
+
+11. THIRD-PARTY SERVICES
+
+Pink Flag integrates with:
+
+- Apple App Store (payments)
+- Supabase (database, authentication)
+- RevenueCat (subscription management)
+- Offenders.io (registry data)
+
+Each service has its own terms of service governing their use.
+
+12. INTELLECTUAL PROPERTY
+
+12.1. Pink Flag Content
+- The Pink Flag app, logo, and design are owned by Pink Flag
+- You may not copy, modify, or distribute our intellectual property
+- User-generated content remains yours
+
+12.2. Registry Data
+- Public registry data is owned by respective government agencies
+- Pink Flag has no ownership over public record information
+
+13. MODIFICATIONS TO TERMS
+
+We may update these Terms of Service at any time. Changes will be effective when posted with an updated "Last Updated" date. Continued use of Pink Flag after changes constitutes acceptance.
+
+14. GOVERNING LAW
+
+These terms are governed by the laws of the United States and the State of California, without regard to conflict of law provisions.
+
+15. DISPUTE RESOLUTION
+
+15.1. Informal Resolution
+- Contact support@pinkflagapp.com for any disputes
+- We will attempt to resolve issues informally first
+
+15.2. Arbitration
+- Disputes not resolved informally shall be settled by binding arbitration
+- Arbitration will be conducted in accordance with AAA rules
+- You waive the right to participate in class action lawsuits
+
+16. CHILDREN'S USE
+
+Pink Flag is not intended for users under 17 years of age. We do not knowingly collect information from children under 17.
+
+17. ACCESSIBILITY
+
+We strive to make Pink Flag accessible to all users. Contact us if you encounter accessibility issues.
+
+18. EXPORT CONTROLS
+
+You agree to comply with all applicable export laws and restrictions.
+
+19. SEVERABILITY
+
+If any provision of these terms is found unenforceable, the remaining provisions will remain in full effect.
+
+20. ENTIRE AGREEMENT
+
+These Terms of Service, together with our Privacy Policy, constitute the entire agreement between you and Pink Flag.
+
+21. CONTACT INFORMATION
+
+For questions about these Terms of Service:
+
+Email: support@pinkflagapp.com
+App: Settings > Legal & Support
+
+22. ACKNOWLEDGMENT
+
+BY USING PINK FLAG, YOU ACKNOWLEDGE THAT:
+
+- You have read and understood these Terms of Service
+- You agree to be bound by these terms
+- You understand the limitations and disclaimers
+- You will use the service responsibly and legally
+- Public records may contain errors and must be verified
+- Pink Flag is a tool for awareness, not a definitive source
+
+23. FAIR CREDIT REPORTING ACT (FCRA) NOTICE
+
+Pink Flag is NOT a consumer reporting agency as defined by the Fair Credit Reporting Act (FCRA).
+
+YOU MAY NOT USE Pink Flag information for:
+- Employment decisions
+- Credit or insurance determinations
+- Housing or rental decisions
+- Educational decisions
+- Any FCRA-regulated purpose
+
+Violation of FCRA regulations may result in civil and criminal penalties.
+
+24. STATE-SPECIFIC PROVISIONS
+
+Some states may have additional requirements or restrictions regarding access to registry information. You are responsible for complying with your local laws.
+
+25. APP STORE TERMS
+
+Your use of Pink Flag is also subject to Apple's App Store Terms of Service. In case of conflict, Apple's terms take precedence for App Store-related matters.
+
+---
+
+BY CREATING AN ACCOUNT OR USING PINK FLAG, YOU AGREE TO THESE TERMS OF SERVICE.
+
+If you do not agree to these terms, you must not use Pink Flag.
+
+---
+
+© 2025 Pink Flag. All rights reserved.

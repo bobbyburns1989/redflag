@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,44 +11,58 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _glowController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _rotateAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Animation controller for 1.5 seconds
+    // Main animation controller for 2 seconds
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
-    // Fade animation
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
-    ));
+    // Glow animation controller (continuous pulse)
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
 
-    // Scale animation for the flag
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
-    ));
+    // Fade animation
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+
+    // Scale animation for the flag with bounce
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.elasticOut),
+      ),
+    );
+
+    // Subtle rotation animation
+    _rotateAnimation = Tween<double>(begin: -0.1, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
+      ),
+    );
 
     // Start animation
     _controller.forward();
 
-    // Navigate to onboarding after 2.5 seconds
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    // Navigate to onboarding after 3 seconds
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/onboarding');
       }
@@ -57,6 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -77,43 +93,68 @@ class _SplashScreenState extends State<SplashScreen>
         child: Center(
           child: FadeTransition(
             opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Pink Flag Icon
-                  CustomPaint(
-                    size: const Size(120, 120),
-                    painter: PinkFlagPainter(),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // PINK FLAG Text
-                  const Text(
-                    'PINK FLAG',
-                    style: TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                      color: Colors.black,
-                      height: 1.2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Pink Flag Icon with enhanced animations
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: RotationTransition(
+                    turns: _rotateAnimation,
+                    child: AnimatedBuilder(
+                      animation: _glowController,
+                      builder: (context, child) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryPink.withValues(
+                                  alpha: 0.3 + (_glowController.value * 0.3),
+                                ),
+                                blurRadius: 30 + (_glowController.value * 20),
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: CustomPaint(
+                            size: const Size(140, 140),
+                            painter: PinkFlagPainter(),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 40),
 
-                  // Tagline
-                  const Text(
-                    'Stay Safe, Stay Aware',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 1,
-                      color: Color(0xFF666666),
-                    ),
+                // PINK FLAG Text with shimmer and hero animation
+                Hero(
+                  tag: 'app_title',
+                  child: Material(
+                    color: Colors.transparent,
+                    child:
+                        Text(
+                              'PINK FLAG',
+                              style: AppTextStyles.displayLargePrimary,
+                            )
+                            .animate(
+                              onPlay: (controller) => controller.repeat(),
+                            )
+                            .shimmer(
+                              duration: 2000.ms,
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+
+                // Tagline with delayed fade-in
+                Text('Stay Safe, Stay Aware', style: AppTextStyles.tagline)
+                    .animate()
+                    .fadeIn(duration: 800.ms, delay: 500.ms)
+                    .slideY(begin: 0.3, end: 0),
+              ],
             ),
           ),
         ),
@@ -179,7 +220,12 @@ class PinkFlagPainter extends CustomPainter {
     shadowPath.lineTo(size.width * 0.2, size.height * 0.5);
     shadowPath.close();
 
-    canvas.drawShadow(shadowPath, AppColors.primaryPink.withOpacity(0.3), 8, false);
+    canvas.drawShadow(
+      shadowPath,
+      AppColors.primaryPink.withValues(alpha: 0.3),
+      8,
+      false,
+    );
   }
 
   @override

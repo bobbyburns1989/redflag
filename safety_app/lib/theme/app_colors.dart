@@ -27,7 +27,7 @@ class AppColors {
   static const Color mediumText = Color(0xFF6B7280); // Grey-500
   static const Color lightText = Color(0xFF9CA3AF); // Grey-400
 
-  // Gradients
+  // Gradients - Various styles for different use cases
   static LinearGradient get pinkGradient => const LinearGradient(
         colors: [primaryPink, deepPink],
         begin: Alignment.topLeft,
@@ -46,10 +46,75 @@ class AppColors {
         end: Alignment.bottomCenter,
       );
 
-  // Shadows
+  // New gradient variations
+  static LinearGradient get subtleGradient => const LinearGradient(
+        colors: [softWhite, lightPink],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  static LinearGradient get boldGradient => const LinearGradient(
+        colors: [deepPink, primaryPink, rose],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  static LinearGradient get verticalGradient => const LinearGradient(
+        colors: [primaryPink, deepPink],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  static LinearGradient get shimmerGradient => LinearGradient(
+        colors: [
+          lightPink.withValues(alpha: 0.1),
+          softPink.withValues(alpha: 0.3),
+          lightPink.withValues(alpha: 0.1),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  static LinearGradient get overlayGradient => LinearGradient(
+        colors: [
+          Colors.black.withValues(alpha: 0.0),
+          Colors.black.withValues(alpha: 0.3),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  // Radial gradients
+  static RadialGradient get radialPinkGradient => const RadialGradient(
+        colors: [primaryPink, deepPink],
+        radius: 1.5,
+      );
+
+  static RadialGradient get glowGradient => RadialGradient(
+        colors: [
+          primaryPink.withValues(alpha: 0.4),
+          primaryPink.withValues(alpha: 0.0),
+        ],
+        radius: 1.0,
+      );
+
+  // Opacity variants for overlays and backgrounds
+  static Color get scrimLight => Colors.black.withValues(alpha: 0.25);
+  static Color get scrimMedium => Colors.black.withValues(alpha: 0.5);
+  static Color get scrimDark => Colors.black.withValues(alpha: 0.75);
+
+  static Color get pinkOverlayLight => primaryPink.withValues(alpha: 0.1);
+  static Color get pinkOverlayMedium => primaryPink.withValues(alpha: 0.2);
+  static Color get pinkOverlayStrong => primaryPink.withValues(alpha: 0.3);
+
+  // Shimmer colors for loading states
+  static const Color shimmerBase = Color(0xFFFDF2F8);
+  static const Color shimmerHighlight = Color(0xFFFFFAF5);
+
+  // Shadows - Enhanced with more variations
   static List<BoxShadow> get softPinkShadow => [
         BoxShadow(
-          color: softPink.withOpacity(0.15),
+          color: softPink.withValues(alpha: 0.15),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -57,9 +122,33 @@ class AppColors {
 
   static List<BoxShadow> get pinkGlow => [
         BoxShadow(
-          color: primaryPink.withOpacity(0.2),
+          color: primaryPink.withValues(alpha: 0.2),
           blurRadius: 20,
           offset: const Offset(0, 8),
+        ),
+      ];
+
+  static List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.08),
+          blurRadius: 16,
+          offset: const Offset(0, 4),
+        ),
+      ];
+
+  static List<BoxShadow> get elevatedShadow => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.12),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  static List<BoxShadow> get subtleShadow => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
         ),
       ];
 }

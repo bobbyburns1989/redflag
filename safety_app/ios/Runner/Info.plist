@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Safety App</string>
+	<string>Pink Flag</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>safety_app</string>
+	<string>Pink Flag</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -34,13 +34,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
@@ -56,5 +49,21 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<!-- Privacy Permission Descriptions (Required by Apple) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pink Flag does not access your photo library.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Pink Flag does not access your camera.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Pink Flag does not access your location for privacy reasons.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Pink Flag does not access your location for privacy reasons.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Pink Flag does not access your microphone.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Pink Flag does not access your contacts.</string>
+	<!-- Emergency calling permission -->
+	<key>NSPhoneCallUsageDescription</key>
+	<string>Pink Flag uses this to connect you to emergency services and safety hotlines.</string>
 </dict>
 </plist>

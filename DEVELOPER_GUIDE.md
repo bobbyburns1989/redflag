@@ -1,8 +1,18 @@
 # Pink Flag - Developer Guide
 
-> **Last Updated**: November 2025
-> **Current Version**: 1.0.0
-> **Status**: Active Development
+> **Last Updated**: November 11, 2025
+> **Current Version**: 1.0.1 (Build 2)
+> **Status**: Ready for App Store Submission
+> **Code Quality**: Production-ready (0 errors, 0 warnings, 0 info notices)
+> **Device Support**: iPhone only (iPad removed in v1.0.1)
+
+## 📚 Essential Documentation
+
+**Start here for specific needs:**
+- **[CODING_GUIDELINES.md](./CODING_GUIDELINES.md)** - Working with Claude Code AI assistant
+- **[APP_STORE_RELEASE_GUIDE.md](./APP_STORE_RELEASE_GUIDE.md)** - Complete App Store submission checklist
+- **[AESTHETIC_ENHANCEMENT_PROGRESS.md](./AESTHETIC_ENHANCEMENT_PROGRESS.md)** - UI/UX enhancement history
+- **[LEGAL_URLS.md](./LEGAL_URLS.md)** - Privacy Policy and Terms of Service URLs
 
 ## 📋 Quick Context
 
@@ -30,6 +40,8 @@
 3. **Enhanced Search**: Added Age and State optional filters
 4. **Optimized Layout**: Entire form fits on single screen without scrolling
 5. **Last Name Required**: Changed from optional to required for better accuracy
+6. **Code Quality** (Nov 6, 2025): Fixed all 42 deprecation warnings (`withOpacity` → `withValues`)
+7. **Documentation** (Nov 6, 2025): Added comprehensive App Store Release Guide and Coding Guidelines
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)
@@ -315,11 +327,18 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 **Flutter**:
 ```bash
-flutter analyze                    # Lint Dart code
+flutter analyze                    # Lint Dart code (Current: 0 issues ✅)
 flutter format lib/ test/          # Format code
 flutter test                       # Run unit tests
 flutter test --coverage            # Generate coverage
 ```
+
+**Current Code Quality Status** (as of Nov 6, 2025):
+- ✅ **0 errors**
+- ✅ **0 warnings**
+- ✅ **0 info notices**
+- ✅ All deprecation warnings fixed
+- ✅ Production-ready
 
 **Python**:
 ```bash
@@ -386,28 +405,43 @@ pytest tests/ -v                   # Run tests (when implemented)
 ### Test Accounts
 - **Backend Mock Data**: Enabled when no API keys configured
 - **Test Names**: "John Smith", "Michael Johnson", "David Williams"
+- **Apple Review Demo Account** (Production):
+  - Email: `applereview@pinkflag.com`
+  - Password: `AppleReview2025!`
+  - Credits: 50 (pre-loaded for testing)
+  - Created for App Store reviewers in v1.0.1
 
 ---
 
 ## 📝 Important Notes for New Developers
 
 ### 1. iOS Bundle Configuration
-- **Bundle ID**: `com.pinkflag.app` (configured in Xcode)
-- **Display Name**: Pink Flag (must update in Info.plist before App Store submission)
+- **Bundle ID**: `com.pinkflag.app` (configured in Xcode - matches App Store Connect)
+- **Display Name**: Pink Flag (already configured in Info.plist)
+- **Device Support**: iPhone only (iPad removed in v1.0.1)
+  - `TARGETED_DEVICE_FAMILY = 1` in project.pbxproj
+  - iPad orientation settings removed from Info.plist
 - **App Store Category**: Lifestyle
 - **Age Rating**: 17+ (due to sex offender registry content)
 - **No special capabilities required** (no iCloud, no Push Notifications, etc.)
 
-### 2. API Keys
+### 2. Legal URLs (App Store Required)
+- **Privacy Policy**: https://customapps.us/pinkflag/privacy
+- **Terms of Service**: https://customapps.us/pinkflag/terms
+- Required for App Store Connect submission
+- Must be accessible before submission
+
+### 3. API Keys
 - **Offenders.io API key is required** for real data
 - Get key at: https://offenders.io
 - Add to `backend/.env`: `OFFENDERS_IO_API_KEY=your_key_here`
 - **Never commit `.env` files** (already in .gitignore)
 
 ### 3. Network Configuration
-- **iOS Simulator**: Use `localhost` in `api_service.dart`
-- **Android Emulator**: Use `10.0.2.2` instead of `localhost`
-- Update `safety_app/lib/services/api_service.dart:10` if needed
+- **Production**: App uses `https://pink-flag-api.fly.dev/api` (already configured)
+- **Local Development**: Change to `http://localhost:8000/api` in `api_service.dart:9`
+- **Android Emulator Local Dev**: Use `http://10.0.2.2:8000/api` instead
+- Backend is deployed on Fly.io and auto-scales (see PRODUCTION_BACKEND_INFO.md)
 
 ### 4. Last Name Field
 - **Changed from optional to required** (November 2025)
@@ -448,6 +482,11 @@ pytest tests/ -v                   # Run tests (when implemented)
 - [ ] Backend doesn't persist search history (by design - privacy)
 - [ ] No unit tests implemented yet
 - [ ] No integration tests yet
+
+### Recently Fixed (Nov 6, 2025)
+- ✅ Fixed all 42 deprecation warnings (`withOpacity` → `withValues` API migration)
+- ✅ Code now uses modern Flutter color API with improved precision
+- ✅ Clean flutter analyze output (0 issues)
 
 ### Future Enhancements
 - [ ] Add search history (local only, not persisted)
@@ -506,8 +545,12 @@ flutter doctor --android-licenses  # Accept licenses
 
 ### Project Documentation
 - `README.md`: User-facing documentation
-- `backend/README.md`: Backend-specific docs
+- `DEVELOPER_GUIDE.md`: This file - comprehensive developer onboarding
+- `CODING_GUIDELINES.md`: Guidelines for working with Claude Code AI assistant
+- `APP_STORE_RELEASE_GUIDE.md`: Complete App Store submission checklist
+- `AESTHETIC_ENHANCEMENT_PROGRESS.md`: UI/UX enhancement history and design system
 - `SETUP.md`: Detailed setup instructions (if exists)
+- `backend/README.md`: Backend-specific docs (if exists)
 
 ### Key Files to Review
 1. `safety_app/lib/main.dart` - App structure & routing
@@ -555,6 +598,6 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ---
 
-**Last Updated**: November 5, 2025
-**Document Version**: 1.0
-**Next Review**: When major features added
+**Last Updated**: November 11, 2025
+**Document Version**: 1.1
+**Next Review**: After App Store approval

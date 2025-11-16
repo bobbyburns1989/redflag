@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/custom_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -8,9 +12,11 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  double _pageOffset = 0.0;
 
   final List<OnboardingPage> _pages = [
     OnboardingPage(
@@ -38,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.privacy_tip,
       title: 'Your Privacy',
       description:
-          'This app does NOT require login or collect personal data. All searches are anonymous. No location tracking is used.',
+          'Login is required to track your search credits. We only collect your email for authentication. No location tracking is used.',
       color: AppColors.primaryPink,
     ),
     OnboardingPage(
@@ -49,6 +55,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: AppColors.deepPink,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController.addListener(() {
+      setState(() {
+        _pageOffset = _pageController.page ?? 0.0;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -68,7 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _completeOnboarding() {
-    Navigator.of(context).pushReplacementNamed('/home');
+    Navigator.of(context).pushReplacementNamed('/login');
   }
 
   @override
@@ -92,79 +108,71 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: AppSpacing.screenPaddingAll,
               child: Column(
                 children: [
-                  // Page indicator
+                  // Enhanced page indicator with animation
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _pages.length,
-                      (index) => Container(
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
+                        width: _currentPage == index ? 32 : 8,
                         height: 8,
                         decoration: BoxDecoration(
+                          gradient: _currentPage == index
+                              ? AppColors.pinkGradient
+                              : null,
                           color: _currentPage == index
-                              ? AppColors.primaryPink
+                              ? null
                               : AppColors.lightPink,
                           borderRadius: BorderRadius.circular(4),
+                          boxShadow: _currentPage == index
+                              ? AppColors.softPinkShadow
+                              : [],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Navigation buttons
+                  AppSpacing.verticalSpaceMd,
+                  // Navigation buttons - balanced layout
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (_currentPage > 0)
-                        TextButton(
-                          onPressed: () {
-                            _pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.primaryPink,
-                          ),
-                          child: const Text(
-                            'Back',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      else
-                        const SizedBox(width: 80),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: AppColors.pinkGradient,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: AppColors.softPinkShadow,
-                        ),
-                        child: ElevatedButton(
+                      // Back button - equal width with Next
+                      Expanded(
+                        child: _currentPage > 0
+                            ? CustomButton(
+                                text: 'Back',
+                                onPressed: () {
+                                  _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.easeInOutCubic,
+                                  );
+                                },
+                                variant: ButtonVariant.secondary,
+                                size: ButtonSize.large,
+                                icon: Icons.arrow_back,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      // Small gap between buttons
+                      if (_currentPage > 0) const SizedBox(width: 12),
+                      // Next/Get Started button - equal width with Back
+                      Expanded(
+                        child: CustomButton(
+                          text: _currentPage == _pages.length - 1
+                              ? 'Get Started'
+                              : 'Next',
                           onPressed: _nextPage,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 15,
-                            ),
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            _currentPage == _pages.length - 1
-                                ? 'Get Started'
-                                : 'Next',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          variant: ButtonVariant.primary,
+                          size: ButtonSize.large,
+                          icon: _currentPage == _pages.length - 1
+                              ? Icons.check_circle
+                              : Icons.arrow_forward,
+                          iconRight: true,
                         ),
                       ),
                     ],
@@ -179,53 +187,94 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPage(OnboardingPage page) {
+    final int pageIndex = _pages.indexOf(page);
+    final double parallaxOffset = (_pageOffset - pageIndex).abs();
+    final double parallaxScale = 1.0 - (parallaxOffset * 0.3).clamp(0.0, 0.3);
+    final double parallaxOpacity = (1.0 - parallaxOffset).clamp(0.0, 1.0);
+
     return Padding(
-      padding: const EdgeInsets.all(40.0),
+      padding: AppSpacing.screenPaddingAll,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [page.color.withOpacity(0.2), page.color.withOpacity(0.1)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: page.color.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Icon(
-              page.icon,
-              size: 100,
-              color: page.color,
+          // Icon with parallax effect
+          Transform.scale(
+            scale: parallaxScale,
+            child: Opacity(
+              opacity: parallaxOpacity,
+              child:
+                  Container(
+                        padding: const EdgeInsets.all(30),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              page.color.withValues(alpha: 0.2),
+                              page.color.withValues(alpha: 0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: page.color.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Icon(page.icon, size: 100, color: page.color),
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .scale(
+                        begin: const Offset(0.5, 0.5),
+                        curve: Curves.elasticOut,
+                      )
+                      .then()
+                      .shimmer(
+                        duration: 2000.ms,
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
             ),
           ),
-          const SizedBox(height: 40),
-          Text(
-            page.title,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: page.color,
+          AppSpacing.verticalSpaceXl,
+
+          // Title with slide animation
+          Transform.translate(
+            offset: Offset(0, parallaxOffset * 20),
+            child: Opacity(
+              opacity: parallaxOpacity,
+              child:
+                  Text(
+                        page.title,
+                        style: AppTextStyles.displayMedium.copyWith(
+                          color: page.color,
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 200.ms)
+                      .slideY(begin: 0.3, end: 0),
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
-          Text(
-            page.description,
-            style: TextStyle(
-              fontSize: 18,
-              color: AppColors.darkText,
-              height: 1.5,
+          AppSpacing.verticalSpaceMd,
+
+          // Description with fade and slide
+          Transform.translate(
+            offset: Offset(0, parallaxOffset * 30),
+            child: Opacity(
+              opacity: parallaxOpacity,
+              child:
+                  Text(
+                        page.description,
+                        style: AppTextStyles.bodyLarge.copyWith(height: 1.6),
+                        textAlign: TextAlign.center,
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 400.ms)
+                      .slideY(begin: 0.5, end: 0),
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

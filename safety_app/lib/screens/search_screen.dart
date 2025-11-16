@@ -1,8 +1,17 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../services/search_service.dart';
 import '../services/api_service.dart';
-import '../models/search_result.dart';
+import '../services/search_history_service.dart';
+import '../models/search_history_entry.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/page_transitions.dart';
 import 'results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -20,12 +29,54 @@ class _SearchScreenState extends State<SearchScreen> {
   final _stateController = TextEditingController();
   final _phoneController = TextEditingController();
   final _zipCodeController = TextEditingController();
+  final _searchService = SearchService();
+  final _historyService = SearchHistoryService();
+  final _uuid = const Uuid();
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool _showOptionalFilters = false;
+  int _currentCredits = 0;
+  StreamSubscription<int>? _creditsSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCredits();
+  }
+
+  Future<void> _loadCredits() async {
+    if (kDebugMode) {
+      print('🔍 [SEARCH] Loading credits...');
+    }
+
+    try {
+      final credits = await _searchService.getCurrentCredits();
+      if (kDebugMode) {
+        print('✅ [SEARCH] Loaded credits: $credits');
+      }
+      setState(() => _currentCredits = credits);
+
+      // Watch for real-time credit changes
+      _creditsSubscription = _searchService.watchCredits().listen((credits) {
+        if (kDebugMode) {
+          print('🔄 [SEARCH] Real-time credit update: $credits');
+        }
+        if (mounted) {
+          setState(() => _currentCredits = credits);
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ [SEARCH] Error loading credits: $e');
+      }
+      // User not logged in or error - credits stay at 0
+    }
+  }
 
   @override
   void dispose() {
+    _creditsSubscription?.cancel();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _ageController.dispose();
@@ -46,8 +97,7 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final apiService = ApiService();
-      final result = await apiService.searchByName(
+      final result = await _searchService.searchByName(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         phoneNumber: _phoneController.text.trim().isEmpty
@@ -66,23 +116,68 @@ class _SearchScreenState extends State<SearchScreen> {
 
       if (!mounted) return;
 
+      // Save search to history
+      try {
+        final historyEntry = SearchHistoryEntry(
+          id: _uuid.v4(),
+          timestamp: DateTime.now(),
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          age: _ageController.text.trim().isEmpty
+              ? null
+              : _ageController.text.trim(),
+          state: _stateController.text.trim().isEmpty
+              ? null
+              : _stateController.text.trim(),
+          phoneNumber: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
+          zipCode: _zipCodeController.text.trim().isEmpty
+              ? null
+              : _zipCodeController.text.trim(),
+          resultCount: result.totalResults,
+          results: result.offenders,
+        );
+
+        await _historyService.saveSearch(historyEntry);
+
+        if (kDebugMode) {
+          print('✅ [SEARCH] Saved search to history: ${historyEntry.id}');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('❌ [SEARCH] Error saving search to history: $e');
+        }
+        // Don't show error to user, search still succeeded
+      }
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}'),
+          content: Text(
+            'Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}',
+          ),
           backgroundColor: AppColors.primaryPink,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => ResultsScreen(searchResult: result),
-        ),
+        PageTransitions.slideAndFade(ResultsScreen(searchResult: result)),
       );
+    } on InsufficientCreditsException catch (e) {
+      if (mounted) {
+        // Immediately sync the badge with the accurate credit count
+        setState(() {
+          _currentCredits = e.currentCredits;
+        });
+        _showOutOfCreditsDialog(e.currentCredits);
+      }
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -96,7 +191,9 @@ class _SearchScreenState extends State<SearchScreen> {
             backgroundColor: AppColors.deepPink,
             duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             action: SnackBarAction(
               label: 'Retry',
               textColor: Colors.white,
@@ -117,7 +214,9 @@ class _SearchScreenState extends State<SearchScreen> {
             backgroundColor: AppColors.deepPink,
             duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -143,64 +242,156 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  void _showOutOfCreditsDialog(int currentCredits) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.credit_card_off, color: AppColors.primaryPink),
+            const SizedBox(width: 12),
+            const Text('Out of Credits'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You have $currentCredits credit${currentCredits == 1 ? '' : 's'} remaining.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Purchase more credits to continue searching.',
+              style: TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/store');
+            },
+            icon: const Icon(Icons.shopping_cart),
+            label: const Text('Get Credits'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPink,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Registry'),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.appBarGradient,
+        title: Hero(
+          tag: 'search_title',
+          child: Material(
+            color: Colors.transparent,
+            child: const Text('Search Registry'),
           ),
         ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: AppColors.appBarGradient),
+        ),
         foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Disclaimer card
-              Card(
-                color: AppColors.lightPink,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: AppColors.softPink, width: 1),
+        actions: [
+          // Credit balance display
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.search, size: 18, color: Colors.white),
+                const SizedBox(width: 6),
+                Text(
+                  '$_currentCredits',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: AppSpacing.screenPaddingAll,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Disclaimer card - compact
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.lightPink,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.softPink, width: 1),
+                  ),
+                  padding: const EdgeInsets.all(8),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.deepPink, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.deepPink,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Search results are potential matches only. Always verify independently.',
-                          style: TextStyle(
+                          'Results are potential matches. Verify independently.',
+                          style: AppTextStyles.caption.copyWith(
                             color: AppColors.deepPink,
-                            fontSize: 11,
                             fontWeight: FontWeight.w500,
+                            fontSize: 11,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 10),
+
+                // Required Fields Section
+                Text(
+                  'REQUIRED FIELDS',
+                  style: AppTextStyles.overline.copyWith(
+                    color: AppColors.primaryPink,
+                  ),
+                ),
+                const SizedBox(height: 4),
 
                 // First name field (required)
-                TextFormField(
+                CustomTextField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'First Name *',
-                    hintText: 'Enter first name',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'First Name *',
+                  hint: 'Enter first name',
+                  prefixIcon: Icons.person,
                   textCapitalization: TextCapitalization.words,
+                  showClearButton: true,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'First name is required';
@@ -211,18 +402,16 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
 
                 // Last name field (required)
-                TextFormField(
+                CustomTextField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Last Name *',
-                    hintText: 'Enter last name',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Last Name *',
+                  hint: 'Enter last name',
+                  prefixIcon: Icons.person_outline,
                   textCapitalization: TextCapitalization.words,
+                  showClearButton: true,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Last name is required';
@@ -233,203 +422,208 @@ class _SearchScreenState extends State<SearchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
-                // Age field (optional)
-                TextFormField(
-                  controller: _ageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Age (Optional)',
-                    hintText: 'Enter age',
-                    prefixIcon: Icon(Icons.cake),
-                    border: OutlineInputBorder(),
-                    counterText: '',
+                // Optional Filters Section
+                ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 4.0,
                   ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      final age = int.tryParse(value);
-                      if (age == null || age < 18 || age > 120) {
-                        return 'Please enter a valid age (18-120)';
-                      }
-                    }
-                    return null;
+                  title: Text(
+                    'OPTIONAL FILTERS',
+                    style: AppTextStyles.overline.copyWith(
+                      color: AppColors.primaryPink,
+                    ),
+                  ),
+                  subtitle: _showOptionalFilters
+                      ? null
+                      : Text(
+                          'Tap to show additional search filters',
+                          style: AppTextStyles.caption,
+                        ),
+                  initiallyExpanded: _showOptionalFilters,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _showOptionalFilters = expanded;
+                    });
                   },
-                ),
-                const SizedBox(height: 10),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 4.0,
+                      ),
+                      child: Column(
+                        children: [
+                          // Row 1: Age + State
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomTextField(
+                                  controller: _ageController,
+                                  label: 'Age',
+                                  hint: 'Age',
+                                  prefixIcon: Icons.cake,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 3,
+                                  showClearButton: true,
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      final age = int.tryParse(value);
+                                      if (age == null ||
+                                          age < 18 ||
+                                          age > 120) {
+                                        return 'Invalid age';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: CustomTextField(
+                                  controller: _stateController,
+                                  label: 'State',
+                                  hint: 'State',
+                                  prefixIcon: Icons.map,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  maxLength: 2,
+                                  showClearButton: true,
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      if (value.length != 2) {
+                                        return 'Must be 2 letters';
+                                      }
+                                      if (!RegExp(
+                                        r'^[A-Z]{2}$',
+                                      ).hasMatch(value.toUpperCase())) {
+                                        return 'Invalid state';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
 
-                // State field (optional)
-                TextFormField(
-                  controller: _stateController,
-                  decoration: const InputDecoration(
-                    labelText: 'State (Optional)',
-                    hintText: 'e.g., CA, NY, TX',
-                    prefixIcon: Icon(Icons.map),
-                    border: OutlineInputBorder(),
-                    counterText: '',
-                  ),
-                  textCapitalization: TextCapitalization.characters,
-                  maxLength: 2,
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      if (value.length != 2) {
-                        return 'State must be 2 letters';
-                      }
-                      if (!RegExp(r'^[A-Z]{2}$').hasMatch(value.toUpperCase())) {
-                        return 'Please enter valid state code';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                // Phone number field (optional)
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number (Optional)',
-                    hintText: 'Enter phone number',
-                    prefixIcon: Icon(Icons.phone),
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      // Basic phone validation
-                      final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
-                      if (digitsOnly.length < 10) {
-                        return 'Please enter a valid phone number';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                // ZIP code field (optional)
-                TextFormField(
-                  controller: _zipCodeController,
-                  decoration: const InputDecoration(
-                    labelText: 'ZIP Code (Optional)',
-                    hintText: 'Enter ZIP code',
-                    prefixIcon: Icon(Icons.location_on),
-                    border: OutlineInputBorder(),
-                    counterText: '',
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 5,
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      if (value.length != 5) {
-                        return 'ZIP code must be 5 digits';
-                      }
-                      if (!RegExp(r'^\d{5}$').hasMatch(value)) {
-                        return 'ZIP code must contain only numbers';
-                      }
-                    }
-                    return null;
-                  },
+                          // Row 2: Phone + ZIP
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomTextField(
+                                  controller: _phoneController,
+                                  label: 'Phone',
+                                  hint: 'Phone',
+                                  prefixIcon: Icons.phone,
+                                  keyboardType: TextInputType.phone,
+                                  showClearButton: true,
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      final digitsOnly = value.replaceAll(
+                                        RegExp(r'\D'),
+                                        '',
+                                      );
+                                      if (digitsOnly.length < 10) {
+                                        return 'Invalid phone';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: CustomTextField(
+                                  controller: _zipCodeController,
+                                  label: 'ZIP Code',
+                                  hint: 'ZIP',
+                                  prefixIcon: Icons.location_on,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 5,
+                                  showClearButton: true,
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      if (value.length != 5) {
+                                        return 'Must be 5 digits';
+                                      }
+                                      if (!RegExp(r'^\d{5}$').hasMatch(value)) {
+                                        return 'Invalid ZIP';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
 
                 // Helper text
                 Text(
                   '* Required fields',
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: AppTextStyles.caption.copyWith(
                     color: Colors.grey.shade600,
+                    fontSize: 11,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
 
                 // Error message
-                if (_errorMessage != null)
-                  Card(
-                    color: AppColors.errorRose,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: AppColors.rose, width: 1),
+                if (_errorMessage != null) ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.errorRose,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.rose, width: 1),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: AppColors.deepPink),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(
-                                color: AppColors.deepPink,
-                                fontWeight: FontWeight.w500,
-                              ),
+                    padding: AppSpacing.cardPaddingAll,
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: AppColors.deepPink),
+                        AppSpacing.horizontalSpaceSm,
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.deepPink,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                if (_errorMessage != null) const SizedBox(height: 10),
+                  const SizedBox(height: 8),
+                ],
 
                 // Search button
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: _isLoading ? null : AppColors.pinkGradient,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: _isLoading ? [] : AppColors.softPinkShadow,
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _performSearch,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: _isLoading ? AppColors.lightPink : Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(AppColors.primaryPink),
-                            ),
-                          )
-                        : const Text(
-                            'Search Registry',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
+                CustomButton(
+                  text: 'Search Registry',
+                  onPressed: _performSearch,
+                  variant: ButtonVariant.primary,
+                  size: ButtonSize.medium,
+                  icon: Icons.search,
+                  isLoading: _isLoading,
                 ),
                 const SizedBox(height: 8),
 
                 // Clear button
-                OutlinedButton(
+                CustomButton(
+                  text: 'Clear Form',
                   onPressed: _isLoading ? null : _clearForm,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: AppColors.primaryPink, width: 2),
-                    foregroundColor: AppColors.primaryPink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Clear Form',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  variant: ButtonVariant.outlined,
+                  size: ButtonSize.medium,
+                  icon: Icons.clear_all,
                 ),
               ],
             ),

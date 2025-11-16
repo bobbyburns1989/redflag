@@ -1,0 +1,127 @@
+PINK FLAG PRIVACY POLICY
+
+Last Updated: November 10, 2025
+
+Welcome to Pink Flag. We are committed to protecting your privacy and ensuring you have a positive experience using our app.
+
+1. INFORMATION WE COLLECT
+
+We collect the following information:
+
+• Email Address: Used for account creation and authentication via Supabase
+• Search Queries: Names and optional filters you search for are stored to provide the service
+• Purchase History: Transaction records for credit purchases via RevenueCat and Apple
+• Usage Data: Basic app usage statistics to improve our service
+
+2. HOW WE USE YOUR INFORMATION
+
+We use your information to:
+
+• Provide and improve the Pink Flag service
+• Process your credit purchases
+• Maintain your search history
+• Send important service updates
+• Comply with legal obligations
+
+3. DATA STORAGE AND SECURITY
+
+• Your data is securely stored using Supabase (PostgreSQL database)
+• All connections use industry-standard encryption (HTTPS/TLS)
+• We implement appropriate security measures to protect your data
+• We do not sell your personal information to third parties
+
+4. THIRD-PARTY SERVICES
+
+We use the following third-party services:
+
+• Supabase: Database and authentication services
+• RevenueCat: Payment processing and subscription management
+• Apple App Store: Payment processing
+• Offenders.io: Public registry search data (no personal data shared)
+
+Each service has its own privacy policy governing their use of your information.
+
+5. DATA RETENTION
+
+• Account data: Retained until you delete your account
+• Search history: Retained until you clear it or delete your account
+• Purchase records: Retained for legal and accounting requirements
+
+6. YOUR RIGHTS
+
+You have the right to:
+
+• Access your personal data
+• Correct inaccurate data
+• Delete your account and data
+• Export your data
+• Opt-out of non-essential data collection
+
+7. CHILDREN'S PRIVACY
+
+Pink Flag is not intended for users under 17 years of age. We do not knowingly collect information from children.
+
+8. CHANGES TO THIS POLICY
+
+We may update this privacy policy from time to time. We will notify you of any material changes by updating the "Last Updated" date.
+
+9. DATA DELETION
+
+You can delete your account and all associated data at any time through the Settings screen. This action:
+
+• Permanently deletes your account
+• Removes all search history
+• Removes all transaction records
+• Cannot be undone
+
+10. CONTACT US
+
+If you have questions about this privacy policy or your data:
+
+Email: support@pinkflagapp.com
+App: Settings > Legal & Support
+
+11. GDPR COMPLIANCE (EU Users)
+
+If you are in the European Union, you have additional rights under GDPR:
+
+• Right to access your data
+• Right to rectification
+• Right to erasure ("right to be forgotten")
+• Right to restrict processing
+• Right to data portability
+• Right to object to processing
+
+12. CCPA COMPLIANCE (California Users)
+
+If you are a California resident, you have rights under CCPA:
+
+• Right to know what data we collect
+• Right to delete your data
+• Right to opt-out of sale (we don't sell data)
+• Right to non-discrimination
+
+13. DISCLAIMER
+
+Pink Flag provides access to PUBLIC RECORDS ONLY. The data we display:
+
+• May be incomplete, outdated, or contain errors
+• Should not be the sole basis for any decision
+• Must be independently verified
+• Is provided for personal safety awareness only
+
+We are not responsible for:
+
+• Accuracy of public registry data
+• Actions taken based on search results
+• Misuse of the application
+
+14. INTERNATIONAL USERS
+
+Your data may be transferred to and processed in the United States where our servers are located.
+
+By using Pink Flag, you acknowledge that you have read and understood this privacy policy and agree to its terms.
+
+---
+
+© 2025 Pink Flag. All rights reserved.
