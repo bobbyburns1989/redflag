@@ -103,20 +103,61 @@ class _StoreScreenState extends State<StoreScreen> {
 
     final result = await _revenueCatService.purchasePackage(package);
 
-    setState(() => _isPurchasing = false);
-
     if (!mounted) return;
 
     if (result.success) {
-      CustomSnackbar.showSuccess(context, 'Credits added successfully!');
-      // Reload credits
-      final newCredits = await _authService.getUserCredits();
-      setState(() => _currentCredits = newCredits);
+      // Purchase successful! Now wait for webhook to add credits
+      CustomSnackbar.showInfo(context, 'Processing purchase...');
+
+      // Retry credit refresh with delays (webhook needs time to process)
+      bool creditsAdded = false;
+      final initialCredits = _currentCredits;
+
+      for (int attempt = 0; attempt < 6; attempt++) {
+        // Wait before checking (1s, 2s, 3s, 4s, 5s, 6s = total 21 seconds)
+        await Future.delayed(Duration(seconds: attempt + 1));
+
+        if (!mounted) return;
+
+        final newCredits = await _authService.getUserCredits();
+
+        if (newCredits > initialCredits) {
+          // Credits were added!
+          setState(() {
+            _currentCredits = newCredits;
+            _isPurchasing = false;
+          });
+          if (mounted) {
+            CustomSnackbar.showSuccess(context, 'Credits added successfully!');
+          }
+          creditsAdded = true;
+          break;
+        }
+
+        if (kDebugMode) {
+          print('🔄 [STORE] Attempt ${attempt + 1}/6: Waiting for webhook to add credits...');
+        }
+      }
+
+      if (!creditsAdded) {
+        // Webhook took too long or failed
+        setState(() => _isPurchasing = false);
+        if (mounted) {
+          CustomSnackbar.showInfo(
+            context,
+            'Purchase completed! Credits will appear shortly. '
+            'If they don\'t appear, use "Restore" button.',
+          );
+        }
+      }
     } else if (result.cancelled) {
+      setState(() => _isPurchasing = false);
       CustomSnackbar.showInfo(context, 'Purchase cancelled');
     } else if (result.pending) {
+      setState(() => _isPurchasing = false);
       CustomSnackbar.showInfo(context, 'Purchase pending...');
     } else {
+      setState(() => _isPurchasing = false);
       CustomSnackbar.showError(context, result.error ?? 'Purchase failed');
     }
   }
