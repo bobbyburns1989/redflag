@@ -1,11 +1,11 @@
 # Pink Flag - Developer Guide
 
-> **Last Updated**: November 19, 2025
-> **Current Version**: 1.1.2 (Build 8) - Critical Bug Fixes
-> **Status**: Production Ready - Auth persistence, purchase flow, credit counter fixes
-> **Code Quality**: Production-ready (0 errors, 0 warnings, 38 info notices)
+> **Last Updated**: November 20, 2025
+> **Current Version**: 1.1.3 (Build 9) - Reverse Image Search
+> **Status**: Production Ready - TinEye integration, UI revamp, full feature set
+> **Code Quality**: Production-ready (0 errors, 0 warnings, 39 info notices)
 > **Device Support**: iPhone only (iPad removed in v1.0.1)
-> **Critical Fixes**: Auth persistence, purchase timeout (21s→78s), credit counter auto-updates
+> **New Feature**: Reverse image search for catfish/scam detection via TinEye API
 
 ## 📚 Essential Documentation
 
@@ -50,6 +50,7 @@
 10. **📱 RELEASE** (Nov 18, 2025): Version 1.1.1 (Build 7) prepared for Apple resubmission with updated app description
 11. **🐛 BUG FIXES** (Nov 19, 2025): **v1.1.2** - Fixed auth persistence (users skip onboarding on return), extended purchase timeout (21s→78s), credit counter auto-updates
 12. **🎨 UI REVAMP** (Nov 20, 2025): Modern/minimal aesthetic overhaul of Search and Results screens - white AppBars, floating cards, softer styling, outlined icons
+13. **🖼️ IMAGE SEARCH** (Nov 20, 2025): **v1.1.3** - Added reverse image search with TinEye API integration for catfish/scam detection - camera, gallery, or URL input
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)
@@ -647,7 +648,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ## 📖 Release History
 
-- **v1.1.3** (Nov 20, 2025): UI Aesthetic Revamp - Modern/minimal design for Search & Results screens
+- **v1.1.3** (Nov 20, 2025): Reverse Image Search - TinEye API integration, catfish detection, UI revamp
 - **v1.1.2** (Nov 19, 2025): Bug fixes - Auth persistence, purchase timeout, credit counter
 - **v1.1.1** (Nov 18, 2025): Removed search history for Apple compliance
 - **v1.1.0** (Nov 18, 2025): Refactored store and auth services
