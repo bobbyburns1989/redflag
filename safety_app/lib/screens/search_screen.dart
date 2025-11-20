@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../services/search_service.dart';
 import '../services/api_service.dart';
-import '../services/search_history_service.dart';
-import '../models/search_history_entry.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_spacing.dart';
@@ -30,8 +27,6 @@ class _SearchScreenState extends State<SearchScreen> {
   final _phoneController = TextEditingController();
   final _zipCodeController = TextEditingController();
   final _searchService = SearchService();
-  final _historyService = SearchHistoryService();
-  final _uuid = const Uuid();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -43,6 +38,33 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _loadCredits();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh credits when user returns from other screens (like Store)
+    if (mounted) {
+      _refreshCreditsQuietly();
+    }
+  }
+
+  /// Refresh credits without showing loading state
+  Future<void> _refreshCreditsQuietly() async {
+    try {
+      final credits = await _searchService.getCurrentCredits();
+      if (mounted) {
+        setState(() => _currentCredits = credits);
+      }
+      if (kDebugMode) {
+        print('🔄 [SEARCH] Credits refreshed: $credits');
+      }
+    } catch (e) {
+      // Silently fail - real-time stream will update eventually
+      if (kDebugMode) {
+        print('⚠️ [SEARCH] Failed to refresh credits: $e');
+      }
+    }
   }
 
   Future<void> _loadCredits() async {
@@ -116,60 +138,37 @@ class _SearchScreenState extends State<SearchScreen> {
 
       if (!mounted) return;
 
-      // Save search to history
-      try {
-        final historyEntry = SearchHistoryEntry(
-          id: _uuid.v4(),
-          timestamp: DateTime.now(),
-          firstName: _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim(),
-          age: _ageController.text.trim().isEmpty
-              ? null
-              : _ageController.text.trim(),
-          state: _stateController.text.trim().isEmpty
-              ? null
-              : _stateController.text.trim(),
-          phoneNumber: _phoneController.text.trim().isEmpty
-              ? null
-              : _phoneController.text.trim(),
-          zipCode: _zipCodeController.text.trim().isEmpty
-              ? null
-              : _zipCodeController.text.trim(),
-          resultCount: result.totalResults,
-          results: result.offenders,
-        );
-
-        await _historyService.saveSearch(historyEntry);
-
-        if (kDebugMode) {
-          print('✅ [SEARCH] Saved search to history: ${historyEntry.id}');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('❌ [SEARCH] Error saving search to history: $e');
-        }
-        // Don't show error to user, search still succeeded
+      // Immediately refresh credits to show deduction
+      final updatedCredits = await _searchService.getCurrentCredits();
+      if (mounted) {
+        setState(() {
+          _currentCredits = updatedCredits;
+        });
       }
 
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Found ${result.totalResults} ${result.totalResults == 1 ? 'result' : 'results'}',
+            ),
+            backgroundColor: AppColors.primaryPink,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          backgroundColor: AppColors.primaryPink,
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+        );
+      }
 
-      Navigator.push(
-        context,
-        PageTransitions.slideAndFade(ResultsScreen(searchResult: result)),
-      );
+      if (mounted) {
+        Navigator.push(
+          context,
+          PageTransitions.slideAndFade(ResultsScreen(searchResult: result)),
+        );
+      }
     } on InsufficientCreditsException catch (e) {
       if (mounted) {
         // Immediately sync the badge with the accurate credit count

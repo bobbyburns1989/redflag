@@ -1,16 +1,19 @@
 # Pink Flag - Developer Guide
 
-> **Last Updated**: November 11, 2025
-> **Current Version**: 1.0.1 (Build 2)
-> **Status**: Ready for App Store Submission
-> **Code Quality**: Production-ready (0 errors, 0 warnings, 0 info notices)
+> **Last Updated**: November 19, 2025
+> **Current Version**: 1.1.2 (Build 8) - Critical Bug Fixes
+> **Status**: Production Ready - Auth persistence, purchase flow, credit counter fixes
+> **Code Quality**: Production-ready (0 errors, 0 warnings, 38 info notices)
 > **Device Support**: iPhone only (iPad removed in v1.0.1)
+> **Critical Fixes**: Auth persistence, purchase timeout (21s→78s), credit counter auto-updates
 
 ## 📚 Essential Documentation
 
 **Start here for specific needs:**
 - **[CODING_GUIDELINES.md](./CODING_GUIDELINES.md)** - Working with Claude Code AI assistant
 - **[APP_STORE_RELEASE_GUIDE.md](./APP_STORE_RELEASE_GUIDE.md)** - Complete App Store submission checklist
+- **[APPLE_REVIEW_SUBMISSION_v1.1.1.md](./APPLE_REVIEW_SUBMISSION_v1.1.1.md)** - Current submission details and updated app description
+- **[APPLE_REVIEW_RESPONSE_v1.1.1.md](./APPLE_REVIEW_RESPONSE_v1.1.1.md)** - Response to Apple's Guideline 5.1.1 rejection
 - **[AESTHETIC_ENHANCEMENT_PROGRESS.md](./AESTHETIC_ENHANCEMENT_PROGRESS.md)** - UI/UX enhancement history
 - **[LEGAL_URLS.md](./LEGAL_URLS.md)** - Privacy Policy and Terms of Service URLs
 
@@ -42,15 +45,20 @@
 5. **Last Name Required**: Changed from optional to required for better accuracy
 6. **Code Quality** (Nov 6, 2025): Fixed all 42 deprecation warnings (`withOpacity` → `withValues`)
 7. **Documentation** (Nov 6, 2025): Added comprehensive App Store Release Guide and Coding Guidelines
+8. **🚨 CRITICAL** (Nov 18, 2025): **REMOVED Search History Feature** to comply with Apple Guideline 5.1.1 - No profile building allowed
+9. **🔧 REFACTORING** (Nov 18, 2025): Refactored `store_screen.dart` (695 → 251 lines, 64% reduction) and `auth_service.dart` (361 → 89 lines + 3 services, 77% reduction)
+10. **📱 RELEASE** (Nov 18, 2025): Version 1.1.1 (Build 7) prepared for Apple resubmission with updated app description
+11. **🐛 BUG FIXES** (Nov 19, 2025): **v1.1.2** - Fixed auth persistence (users skip onboarding on return), extended purchase timeout (21s→78s), credit counter auto-updates
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)
-- ✅ 5-page onboarding flow with legal/ethical education
+- ✅ 5-page onboarding flow with legal/ethical education (updated privacy messaging)
 - ✅ Search form with 6 fields (2 required, 4 optional)
 - ✅ Backend API integration with Offenders.io
-- ✅ Results display with card-based UI
+- ✅ Results display with card-based UI (ephemeral, not stored)
 - ✅ Emergency resources screen with tap-to-call
-- ✅ Bottom navigation between Search and Resources
+- ✅ Bottom navigation between Search, Resources, and Settings
+- ✅ **Privacy-first**: No search history stored anywhere (local or remote)
 
 ---
 
@@ -478,25 +486,50 @@ pytest tests/ -v                   # Run tests (when implemented)
 ## 🐛 Known Issues & Todos
 
 ### Current Issues
-- [ ] Flutter dependencies have newer versions available (15 packages)
+- [ ] Flutter dependencies have newer versions available (26 packages)
 - [ ] Backend doesn't persist search history (by design - privacy)
 - [ ] No unit tests implemented yet
 - [ ] No integration tests yet
+- [ ] Refactored store_screen needs testing before deployment
+- [ ] Refactored auth_service needs testing before deployment
+
+### Recently Fixed (Nov 19, 2025) - v1.1.2
+- ✅ **Auth Persistence**: Returning users skip onboarding/login, go straight to home
+- ✅ **Purchase Timeout**: Extended from 21s to 78s with progress feedback every 9s
+- ✅ **Purchase Fallback**: Dialog with "Restore Now" button if webhook delays
+- ✅ **Credit Counter**: Auto-updates after purchases and searches
+- ✅ **Files Modified**: splash_screen.dart, store_screen.dart, search_screen.dart
+
+### Recently Fixed (Nov 18, 2025) - v1.1.1
+- ✅ Removed search history feature (Apple Guideline 5.1.1 compliance)
+- ✅ Refactored store_screen.dart (64% code reduction, modular purchase architecture)
+- ✅ Refactored auth_service.dart (77% reduction, split into 3 services)
+- ✅ Version updated to 1.1.1+7 for Apple resubmission
+- ✅ Updated app description to accurately reflect no search history storage
+- ✅ Created comprehensive Apple review response documentation
 
 ### Recently Fixed (Nov 6, 2025)
 - ✅ Fixed all 42 deprecation warnings (`withOpacity` → `withValues` API migration)
 - ✅ Code now uses modern Flutter color API with improved precision
-- ✅ Clean flutter analyze output (0 issues)
+- ✅ Clean flutter analyze output (0 errors, 0 warnings)
 
 ### Future Enhancements
-- [ ] Add search history (local only, not persisted)
-- [ ] Implement user favorites/bookmarks (local)
+- [ ] Complete refactoring: search_screen.dart, resources_screen.dart, settings_screen.dart
+- [ ] Add unit tests for PurchaseHandler and auth services
+- [ ] Add integration tests for purchase and auth flows
 - [ ] Add map view for results
 - [ ] Improve loading states with skeleton screens
 - [ ] Add dark mode support
 - [ ] Internationalization (i18n) for Spanish
 - [ ] Backend rate limiting
 - [ ] Production deployment guide
+
+### Refactoring Progress
+- ✅ **store_screen.dart** - Complete (695 → 251 lines, 64% reduction) - See `REFACTORING_STORE_SCREEN.md`
+- ✅ **auth_service.dart** - Complete (361 → 89 lines facade + 3 services, 77% reduction) - See `REFACTORING_AUTH_SERVICE.md`
+- [ ] **search_screen.dart** - Pending (595 lines)
+- [ ] **resources_screen.dart** - Pending (505 lines)
+- [ ] **settings_screen.dart** - Pending (431 lines)
 
 ---
 
@@ -598,6 +631,19 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ---
 
-**Last Updated**: November 11, 2025
-**Document Version**: 1.1
-**Next Review**: After App Store approval
+**Last Updated**: November 19, 2025
+**Document Version**: 1.3
+**Next Review**: After App Store approval of v1.1.2
+
+---
+
+## 📖 Release History
+
+- **v1.1.2** (Nov 19, 2025): Bug fixes - Auth persistence, purchase timeout, credit counter
+- **v1.1.1** (Nov 18, 2025): Removed search history for Apple compliance
+- **v1.1.0** (Nov 18, 2025): Refactored store and auth services
+- **v1.0.3** (Nov 6, 2025): Fixed deprecation warnings, improved code quality
+- **v1.0.1**: iPad support removed, iPhone only
+- **v1.0.0**: Initial release - Pink Flag rebranded from Safety First
+
+See [RELEASE_NOTES_v1.1.2.md](RELEASE_NOTES_v1.1.2.md) for detailed changelog.

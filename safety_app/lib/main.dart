@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'services/search_history_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
@@ -31,15 +29,6 @@ Future<void> main() async {
 
   if (kDebugMode) {
     print('✅ [MAIN] Supabase initialized');
-  }
-
-  // Initialize Hive for local search history
-  await Hive.initFlutter();
-  final historyService = SearchHistoryService();
-  await historyService.init();
-
-  if (kDebugMode) {
-    print('✅ [MAIN] Hive initialized for search history');
   }
 
   // Print app configuration

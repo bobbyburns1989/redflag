@@ -6,12 +6,14 @@ Welcome to Pink Flag. We are committed to protecting your privacy and ensuring y
 
 1. INFORMATION WE COLLECT
 
-We collect the following information:
+We collect minimal information to provide our service:
 
 • Email Address: Used for account creation and authentication via Supabase
-• Search Queries: Names and optional filters you search for are stored to provide the service
+• Search Credits Balance: Track your remaining searches for credit-based access
 • Purchase History: Transaction records for credit purchases via RevenueCat and Apple
 • Usage Data: Basic app usage statistics to improve our service
+
+IMPORTANT: We DO NOT store your search queries or search results. All searches are ephemeral and private.
 
 2. HOW WE USE YOUR INFORMATION
 
@@ -19,9 +21,15 @@ We use your information to:
 
 • Provide and improve the Pink Flag service
 • Process your credit purchases
-• Maintain your search history
+• Track your search credit balance
 • Send important service updates
 • Comply with legal obligations
+
+We DO NOT:
+• Store your search queries or results
+• Build profiles based on your searches
+• Aggregate or analyze your search data
+• Share your search activity with anyone
 
 3. DATA STORAGE AND SECURITY
 
@@ -44,8 +52,9 @@ Each service has its own privacy policy governing their use of your information.
 5. DATA RETENTION
 
 • Account data: Retained until you delete your account
-• Search history: Retained until you clear it or delete your account
-• Purchase records: Retained for legal and accounting requirements
+• Search queries: NOT retained - searches are ephemeral and private
+• Search results: NOT retained - results are displayed only and not stored
+• Purchase records: Retained for legal and accounting requirements (Apple/RevenueCat requirements)
 
 6. YOUR RIGHTS
 
@@ -70,9 +79,11 @@ We may update this privacy policy from time to time. We will notify you of any m
 You can delete your account and all associated data at any time through the Settings screen. This action:
 
 • Permanently deletes your account
-• Removes all search history
-• Removes all transaction records
+• Removes your email and authentication data
+• Removes all transaction records (where legally permitted)
 • Cannot be undone
+
+Note: Search history is NOT stored, so there is nothing to delete. Your searches are private and ephemeral.
 
 10. CONTACT US
 

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
@@ -61,12 +63,35 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animation
     _controller.forward();
 
-    // Navigate to onboarding after 3 seconds
+    // Navigate based on authentication state after 3 seconds
     Future.delayed(const Duration(milliseconds: 3000), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/onboarding');
-      }
+      _navigateToNextScreen();
     });
+  }
+
+  /// Navigate to the appropriate screen based on auth state
+  Future<void> _navigateToNextScreen() async {
+    if (!mounted) return;
+
+    // Check if user is authenticated (Supabase handles persistence automatically)
+    final currentUser = Supabase.instance.client.auth.currentUser;
+
+    if (currentUser != null) {
+      // User is logged in → skip onboarding and login, go straight to home
+      if (kDebugMode) {
+        print('✅ [SPLASH] User authenticated: ${currentUser.id}');
+        print('✅ [SPLASH] Email: ${currentUser.email}');
+        print('✅ [SPLASH] Navigating to home screen');
+      }
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      // No user authenticated → show onboarding flow
+      if (kDebugMode) {
+        print('ℹ️ [SPLASH] No user authenticated');
+        print('ℹ️ [SPLASH] Navigating to onboarding');
+      }
+      Navigator.of(context).pushReplacementNamed('/onboarding');
+    }
   }
 
   @override

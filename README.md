@@ -2,7 +2,7 @@
 
 > A cross-platform Flutter mobile application for checking public sex offender registries through name search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.2-blue)
 ![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey)
 ![Flutter](https://img.shields.io/badge/Flutter-3.32.8-02569B?logo=flutter)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
@@ -116,11 +116,11 @@ Access to public safety information should be easy, anonymous, and ethically gui
 - **Safety Tips** for personal protection
 
 ### 5. 🛡️ Privacy & Security
-- **No user accounts** required
-- **No location tracking** (MVP doesn't use GPS)
-- **Anonymous searches** - no logging
+- **No user accounts** required (authentication for credit-based searches only)
+- **No location tracking** (does not use GPS)
+- **No search history stored** - searches are completely ephemeral
 - **HTTPS API calls** for secure communication
-- **No search history** persistence
+- **Results displayed temporarily** and never saved
 
 ## 🚀 Quick Start
 

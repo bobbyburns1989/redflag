@@ -42,9 +42,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ),
     OnboardingPage(
       icon: Icons.privacy_tip,
-      title: 'Your Privacy',
+      title: 'Your Privacy Matters',
       description:
-          'Login is required to track your search credits. We only collect your email for authentication. No location tracking is used.',
+          'Searches are completely private and NOT saved. We only collect your email for authentication and track search credits. No search history. No location tracking. No profile building.',
       color: AppColors.primaryPink,
     ),
     OnboardingPage(

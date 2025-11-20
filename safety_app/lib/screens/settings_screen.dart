@@ -10,7 +10,6 @@ import '../widgets/loading_widgets.dart';
 import 'settings/delete_account_screen.dart';
 import 'settings/privacy_policy_screen.dart';
 import 'settings/terms_screen.dart';
-import 'search_history_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -205,23 +204,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Transaction history - Coming soon'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Search History Section
-                  _buildSectionHeader('Search History'),
-                  _buildSettingsTile(
-                    icon: Icons.search,
-                    title: 'View Past Searches',
-                    subtitle: 'See your search history',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SearchHistoryScreen(),
                         ),
                       );
                     },

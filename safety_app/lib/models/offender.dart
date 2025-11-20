@@ -1,34 +1,12 @@
-import 'package:hive/hive.dart';
-
-part 'offender.g.dart';
-
-@HiveType(typeId: 0)
 class Offender {
-  @HiveField(0)
   final String id;
-
-  @HiveField(1)
   final String fullName;
-
-  @HiveField(2)
   final int? age;
-
-  @HiveField(3)
   final String? city;
-
-  @HiveField(4)
   final String? state;
-
-  @HiveField(5)
   final String? offenseDescription;
-
-  @HiveField(6)
   final String? registrationDate;
-
-  @HiveField(7)
   final double? distance;
-
-  @HiveField(8)
   final String? address;
 
   Offender({

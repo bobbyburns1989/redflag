@@ -107,58 +107,130 @@ class _StoreScreenState extends State<StoreScreen> {
 
     if (result.success) {
       // Purchase successful! Now wait for webhook to add credits
-      CustomSnackbar.showInfo(context, 'Processing purchase...');
+      if (mounted) {
+        CustomSnackbar.showInfo(
+          context,
+          'Payment successful! Adding credits...',
+        );
+      }
 
       // Retry credit refresh with delays (webhook needs time to process)
       bool creditsAdded = false;
       final initialCredits = _currentCredits;
 
-      for (int attempt = 0; attempt < 6; attempt++) {
-        // Wait before checking (1s, 2s, 3s, 4s, 5s, 6s = total 21 seconds)
-        await Future.delayed(Duration(seconds: attempt + 1));
+      // Extended timeout: 12 attempts = ~78 seconds total
+      // Progressive delays: 2s, 3s, 4s, 5s, 6s, 7s, 8s, 9s, 10s, 11s, 12s, 13s
+      for (int attempt = 0; attempt < 12; attempt++) {
+        await Future.delayed(Duration(seconds: attempt + 2));
 
         if (!mounted) return;
+
+        // Show progress feedback every 3rd attempt
+        if (attempt > 0 && attempt % 3 == 0 && mounted) {
+          CustomSnackbar.showInfo(
+            context,
+            'Still processing... (${attempt + 1}/12)',
+          );
+        }
 
         final newCredits = await _authService.getUserCredits();
 
         if (newCredits > initialCredits) {
           // Credits were added!
+          final addedCredits = newCredits - initialCredits;
           setState(() {
             _currentCredits = newCredits;
             _isPurchasing = false;
           });
           if (mounted) {
-            CustomSnackbar.showSuccess(context, 'Credits added successfully!');
+            CustomSnackbar.showSuccess(
+              context,
+              'Success! $addedCredits credits added! 🎉',
+            );
           }
           creditsAdded = true;
+
+          if (kDebugMode) {
+            print('✅ [STORE] Credits added after ${attempt + 1} attempts');
+            print('✅ [STORE] $initialCredits → $newCredits (+$addedCredits)');
+          }
           break;
         }
 
         if (kDebugMode) {
-          print('🔄 [STORE] Attempt ${attempt + 1}/6: Waiting for webhook to add credits...');
+          print('🔄 [STORE] Attempt ${attempt + 1}/12: Waiting for webhook...');
         }
       }
 
       if (!creditsAdded) {
         // Webhook took too long or failed
         setState(() => _isPurchasing = false);
+
+        if (kDebugMode) {
+          print('⚠️ [STORE] Webhook timeout after 78 seconds');
+          print('⚠️ [STORE] Purchase successful but credits not added yet');
+          print('⚠️ [STORE] User should restore purchases or wait');
+        }
+
         if (mounted) {
-          CustomSnackbar.showInfo(
-            context,
-            'Purchase completed! Credits will appear shortly. '
-            'If they don\'t appear, use "Restore" button.',
+          // Show dialog with options
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.primaryPink),
+                  const SizedBox(width: 8),
+                  const Text('Purchase Completed'),
+                ],
+              ),
+              content: const Text(
+                'Your payment was successful! ✅\n\n'
+                'Credits are still being processed by Apple. This usually takes just a few moments.\n\n'
+                'What to do:\n'
+                '• Wait 1 minute and tap "Restore Now" below\n'
+                '• OR close the app and reopen - credits will appear\n'
+                '• If credits don\'t appear within 5 minutes, use the "Restore Purchases" button in Settings',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('I\'ll Wait'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await _restorePurchases();
+                  },
+                  child: Text(
+                    'Restore Now',
+                    style: TextStyle(
+                      color: AppColors.primaryPink,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         }
       }
     } else if (result.cancelled) {
       setState(() => _isPurchasing = false);
-      CustomSnackbar.showInfo(context, 'Purchase cancelled');
+      if (mounted) {
+        CustomSnackbar.showInfo(context, 'Purchase cancelled');
+      }
     } else if (result.pending) {
       setState(() => _isPurchasing = false);
-      CustomSnackbar.showInfo(context, 'Purchase pending...');
+      if (mounted) {
+        CustomSnackbar.showInfo(context, 'Purchase pending...');
+      }
     } else {
       setState(() => _isPurchasing = false);
-      CustomSnackbar.showError(context, result.error ?? 'Purchase failed');
+      if (mounted) {
+        CustomSnackbar.showError(context, result.error ?? 'Purchase failed');
+      }
     }
   }
 
