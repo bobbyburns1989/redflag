@@ -9,6 +9,7 @@ import 'screens/search_screen.dart';
 import 'screens/resources_screen.dart';
 import 'screens/store_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/image_search_screen.dart';
 import 'widgets/page_transitions.dart';
 import 'widgets/custom_bottom_nav.dart';
 import 'theme/app_theme.dart';
@@ -80,6 +81,8 @@ class PinkFlagApp extends StatelessWidget {
             return PageTransitions.slideFromBottom(const StoreScreen());
           case '/settings':
             return PageTransitions.slideFromRight(const SettingsScreen());
+          case '/image-search':
+            return PageTransitions.slideFromBottom(const ImageSearchScreen());
           default:
             return PageTransitions.fadeTransition(const SplashScreen());
         }

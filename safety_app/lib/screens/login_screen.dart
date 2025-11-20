@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_button.dart';
@@ -6,6 +8,11 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/custom_snackbar.dart';
 import '../widgets/loading_widgets.dart';
 
+/// Login screen with Apple Sign-In as primary option
+///
+/// Apple Sign-In is the primary login method. Email/password is kept
+/// as a secondary option but hidden by default since no existing users
+/// have email accounts.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,7 +27,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isAppleLoading = false;
   bool _obscurePassword = true;
+  bool _showEmailLogin = false; // Hidden by default
+  bool _isAppleAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAppleAvailability();
+  }
 
   @override
   void dispose() {
@@ -29,7 +45,44 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  /// Check if Apple Sign-In is available
+  Future<void> _checkAppleAvailability() async {
+    final available = await _authService.isAppleSignInAvailable();
+    if (mounted) {
+      setState(() => _isAppleAvailable = available);
+    }
+  }
+
+  /// Handle Apple Sign-In
+  Future<void> _handleAppleSignIn() async {
+    if (!_isAppleAvailable) {
+      CustomSnackbar.showError(
+        context,
+        'Apple Sign-In is not available on this device',
+      );
+      return;
+    }
+
+    setState(() => _isAppleLoading = true);
+
+    final result = await _authService.signInWithApple();
+
+    setState(() => _isAppleLoading = false);
+
+    if (!mounted) return;
+
+    if (result.success) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      // Don't show error for cancelled sign-in
+      if (result.error != 'Sign in was cancelled') {
+        CustomSnackbar.showError(context, result.error ?? 'Sign in failed');
+      }
+    }
+  }
+
+  /// Handle email/password login
+  Future<void> _handleEmailLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -44,13 +97,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (result.success) {
-      // Navigate to home
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       CustomSnackbar.showError(context, result.error ?? 'Login failed');
     }
   }
 
+  /// Handle forgot password
   Future<void> _handleForgotPassword() async {
     final emailController = TextEditingController();
 
@@ -86,7 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (confirmed == true && emailController.text.isNotEmpty) {
-      final result = await _authService.resetPassword(emailController.text.trim());
+      final result =
+          await _authService.resetPassword(emailController.text.trim());
 
       if (!mounted) return;
 
@@ -124,139 +178,207 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo
-                    Icon(
-                      Icons.flag,
-                      size: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo
+                  Icon(
+                    Icons.flag,
+                    size: 80,
+                    color: AppColors.primaryPink,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Title
+                  Text(
+                    'Welcome Back',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
                       color: AppColors.primaryPink,
                     ),
-                    const SizedBox(height: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
 
-                    // Title
-                    Text(
-                      'Welcome Back',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryPink,
-                      ),
-                      textAlign: TextAlign.center,
+                  // Subtitle
+                  Text(
+                    'Log in to continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(height: 8),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
 
-                    // Subtitle
-                    Text(
-                      'Log in to continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
+                  // Apple Sign-In button (primary)
+                  if (_isAppleLoading)
+                    LoadingWidgets.centered()
+                  else if (_isAppleAvailable)
+                    SignInWithAppleButton(
+                      onPressed: _handleAppleSignIn,
+                      style: SignInWithAppleButtonStyle.black,
+                      borderRadius: BorderRadius.circular(12),
+                      height: 50,
                     ),
-                    const SizedBox(height: 40),
+                  const SizedBox(height: 24),
 
-                    // Email field
-                    CustomTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'Enter your email',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        // Proper email validation regex
-                        final emailRegex = RegExp(
-                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                        );
-                        if (!emailRegex.hasMatch(value.trim().toLowerCase())) {
-                          return 'Please enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password field
-                    CustomTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hint: 'Enter your password',
-                      obscureText: _obscurePassword,
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      onSuffixTap: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Forgot Password link
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _handleForgotPassword,
+                  // Divider with "or"
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey[300])),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.primaryPink,
-                            fontSize: 14,
-                          ),
+                          'or',
+                          style: TextStyle(color: Colors.grey[500]),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
+                      Expanded(child: Divider(color: Colors.grey[300])),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
 
-                    // Login button
-                    if (_isLoading)
-                      LoadingWidgets.centered()
-                    else
-                      CustomButton(
-                        text: 'Log In',
-                        onPressed: _handleLogin,
-                      ),
-                    const SizedBox(height: 16),
-
-                    // Sign up link
-                    Row(
+                  // Toggle for email login (secondary option)
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _showEmailLogin = !_showEmailLogin);
+                    },
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Don\'t have an account? ',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/signup');
-                          },
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: AppColors.primaryPink,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          _showEmailLogin
+                              ? 'Hide email login'
+                              : 'Log in with email',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
                           ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _showEmailLogin
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Colors.grey[600],
+                          size: 20,
                         ),
                       ],
                     ),
+                  ),
+
+                  // Email login form (collapsible)
+                  if (_showEmailLogin) ...[
+                    const SizedBox(height: 16),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          // Email field
+                          CustomTextField(
+                            controller: _emailController,
+                            label: 'Email',
+                            hint: 'Enter your email',
+                            keyboardType: TextInputType.emailAddress,
+                            prefixIcon: Icons.email_outlined,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              final emailRegex = RegExp(
+                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                              );
+                              if (!emailRegex
+                                  .hasMatch(value.trim().toLowerCase())) {
+                                return 'Please enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Password field
+                          CustomTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            hint: 'Enter your password',
+                            obscureText: _obscurePassword,
+                            prefixIcon: Icons.lock_outline,
+                            suffixIcon: _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            onSuffixTap: () {
+                              setState(
+                                  () => _obscurePassword = !_obscurePassword);
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Forgot Password link
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _handleForgotPassword,
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: AppColors.primaryPink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Login button
+                          if (_isLoading)
+                            LoadingWidgets.centered()
+                          else
+                            CustomButton(
+                              text: 'Log In with Email',
+                              onPressed: _handleEmailLogin,
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
+                  const SizedBox(height: 24),
+
+                  // Sign up link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Don\'t have an account? ',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/signup');
+                        },
+                        child: Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: AppColors.primaryPink,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from routers import search
+from routers import search, image_search
 
 # Load environment variables
 load_dotenv()
@@ -25,6 +25,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(search.router, prefix="/api", tags=["search"])
+app.include_router(image_search.router, prefix="/api", tags=["image-search"])
 
 @app.get("/")
 async def root():

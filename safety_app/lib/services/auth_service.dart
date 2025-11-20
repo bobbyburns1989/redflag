@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'revenuecat_service.dart';
+import 'apple_auth_service.dart';
 
 /// Authentication service using Supabase Auth
 class AuthService {
   final _supabase = Supabase.instance.client;
+  final _appleAuthService = AppleAuthService();
 
   /// Sign up with email/password
   Future<AuthResult> signUp(String email, String password) async {
@@ -193,6 +195,28 @@ class AuthService {
     } catch (e) {
       return AuthResult.failed('An unexpected error occurred: ${e.toString()}');
     }
+  }
+
+  /// Sign in with Apple
+  ///
+  /// Primary authentication method to prevent abuse.
+  /// Apple IDs are difficult to create in bulk, making this
+  /// more secure than email/password for free credit distribution.
+  Future<AuthResult> signInWithApple() async {
+    final result = await _appleAuthService.signInWithApple();
+
+    if (result.success && result.user != null) {
+      return AuthResult.success(result.user!);
+    } else if (result.cancelled) {
+      return AuthResult.failed('Sign in was cancelled');
+    } else {
+      return AuthResult.failed(result.error ?? 'Apple Sign-In failed');
+    }
+  }
+
+  /// Check if Apple Sign-In is available on this device
+  Future<bool> isAppleSignInAvailable() async {
+    return await _appleAuthService.isAvailable();
   }
 
   /// Sign out

@@ -49,6 +49,7 @@
 9. **🔧 REFACTORING** (Nov 18, 2025): Refactored `store_screen.dart` (695 → 251 lines, 64% reduction) and `auth_service.dart` (361 → 89 lines + 3 services, 77% reduction)
 10. **📱 RELEASE** (Nov 18, 2025): Version 1.1.1 (Build 7) prepared for Apple resubmission with updated app description
 11. **🐛 BUG FIXES** (Nov 19, 2025): **v1.1.2** - Fixed auth persistence (users skip onboarding on return), extended purchase timeout (21s→78s), credit counter auto-updates
+12. **🎨 UI REVAMP** (Nov 20, 2025): Modern/minimal aesthetic overhaul of Search and Results screens - white AppBars, floating cards, softer styling, outlined icons
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)
@@ -493,6 +494,13 @@ pytest tests/ -v                   # Run tests (when implemented)
 - [ ] Refactored store_screen needs testing before deployment
 - [ ] Refactored auth_service needs testing before deployment
 
+### Recently Fixed (Nov 20, 2025) - UI Aesthetic Revamp
+- ✅ **Search Screen**: Modern/minimal redesign with white AppBar, floating card, softer styling
+- ✅ **Results Screen**: Matching aesthetic with floating summary card, softer disclaimers
+- ✅ **Offender Cards**: Removed borders, softer shadows, outlined icons
+- ✅ **Out of Credits Dialog**: Extracted to reusable widget (`lib/widgets/dialogs/out_of_credits_dialog.dart`)
+- ✅ **Files Modified**: search_screen.dart (621 lines), results_screen.dart, offender_card.dart
+
 ### Recently Fixed (Nov 19, 2025) - v1.1.2
 - ✅ **Auth Persistence**: Returning users skip onboarding/login, go straight to home
 - ✅ **Purchase Timeout**: Extended from 21s to 78s with progress feedback every 9s
@@ -631,14 +639,15 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ---
 
-**Last Updated**: November 19, 2025
-**Document Version**: 1.3
-**Next Review**: After App Store approval of v1.1.2
+**Last Updated**: November 20, 2025
+**Document Version**: 1.4
+**Next Review**: After App Store approval of v1.1.3
 
 ---
 
 ## 📖 Release History
 
+- **v1.1.3** (Nov 20, 2025): UI Aesthetic Revamp - Modern/minimal design for Search & Results screens
 - **v1.1.2** (Nov 19, 2025): Bug fixes - Auth persistence, purchase timeout, credit counter
 - **v1.1.1** (Nov 18, 2025): Removed search history for Apple compliance
 - **v1.1.0** (Nov 18, 2025): Refactored store and auth services

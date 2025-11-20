@@ -9,16 +9,21 @@ class OffenderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 3,
-      color: AppColors.softWhite,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.softPink, width: 2),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,23 +33,16 @@ class OffenderCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: AppColors.pinkGradient,
+                    color: AppColors.lightPink,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryPink.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 26,
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: AppColors.primaryPink,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,18 +50,18 @@ class OffenderCard extends StatelessWidget {
                       Text(
                         offender.fullName,
                         style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       if (offender.age != null)
                         Text(
                           'Age: ${offender.age}',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade700,
+                            fontSize: 13,
+                            color: AppColors.mediumText,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -72,65 +70,64 @@ class OffenderCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
 
             // Location
             if (offender.address != null ||
                 offender.city != null ||
                 offender.state != null) ...[
-              _buildInfoRow(Icons.location_on, 'Location', _buildFullAddress()),
-              const SizedBox(height: 8),
+              _buildInfoRow(Icons.location_on_outlined, 'Location', _buildFullAddress()),
+              const SizedBox(height: 6),
             ],
 
             // Offense description
             if (offender.offenseDescription != null) ...[
               _buildInfoRow(
-                Icons.warning_amber,
+                Icons.warning_amber_rounded,
                 'Offense',
                 offender.offenseDescription!,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
             ],
 
             // Registration date
             if (offender.registrationDate != null) ...[
               _buildInfoRow(
-                Icons.calendar_today,
+                Icons.calendar_today_outlined,
                 'Registered',
                 offender.registrationDate!,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
             ],
 
             // Distance (if available)
             if (offender.distance != null) ...[
               _buildInfoRow(
-                Icons.near_me,
+                Icons.near_me_outlined,
                 'Distance',
                 '${offender.distance!.toStringAsFixed(1)} miles',
               ),
             ],
 
-            // Disclaimer
-            const Divider(height: 28, thickness: 1, color: AppColors.softPink),
+            // Disclaimer - softer styling
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.lightPink,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.rose, width: 1.5),
+                color: AppColors.palePink,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: AppColors.deepPink),
-                  const SizedBox(width: 10),
+                  Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primaryPink),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Verify this information through official channels',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.deepPink,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: AppColors.mediumText,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),

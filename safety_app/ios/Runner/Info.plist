@@ -51,9 +51,9 @@
 	</dict>
 	<!-- Privacy Permission Descriptions (Required by Apple) -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Pink Flag does not access your photo library.</string>
+	<string>Pink Flag needs access to your photo library to select images for reverse image search to help detect potential catfishing or fake profiles.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Pink Flag does not access your camera.</string>
+	<string>Pink Flag needs camera access to take photos for reverse image search to help detect potential catfishing or fake profiles.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Pink Flag does not access your location for privacy reasons.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

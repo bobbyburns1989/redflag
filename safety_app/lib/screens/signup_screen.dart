@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
 import '../widgets/custom_snackbar.dart';
 import '../widgets/loading_widgets.dart';
 
+/// Sign up screen with Apple Sign-In as the only option
+///
+/// Apple Sign-In is used to prevent abuse where users create
+/// multiple email accounts to get free searches. Apple IDs are
+/// much harder to create in bulk since they require phone
+/// verification or payment methods.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -14,38 +20,39 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
 
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  bool _isAppleAvailable = true;
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _checkAppleAvailability();
   }
 
-  Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) return;
+  /// Check if Apple Sign-In is available on this device
+  /// Should always be true on iOS 13+
+  Future<void> _checkAppleAvailability() async {
+    final available = await _authService.isAppleSignInAvailable();
+    if (mounted) {
+      setState(() => _isAppleAvailable = available);
+    }
+  }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      CustomSnackbar.showError(context, 'Passwords do not match');
+  /// Handle Apple Sign-In button press
+  Future<void> _handleAppleSignIn() async {
+    if (!_isAppleAvailable) {
+      CustomSnackbar.showError(
+        context,
+        'Apple Sign-In is not available on this device',
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.signUp(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+    final result = await _authService.signInWithApple();
 
     setState(() => _isLoading = false);
 
@@ -59,7 +66,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // Navigate to home
       Navigator.pushReplacementNamed(context, '/home');
     } else {
-      CustomSnackbar.showError(context, result.error ?? 'Sign up failed');
+      // Don't show error for cancelled sign-in
+      if (result.error != 'Sign in was cancelled') {
+        CustomSnackbar.showError(context, result.error ?? 'Sign up failed');
+      }
     }
   }
 
@@ -81,148 +91,133 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo
-                    Icon(
-                      Icons.flag,
-                      size: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo
+                  Icon(
+                    Icons.flag,
+                    size: 80,
+                    color: AppColors.primaryPink,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Title
+                  Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
                       color: AppColors.primaryPink,
                     ),
-                    const SizedBox(height: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
 
-                    // Title
-                    Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryPink,
-                      ),
-                      textAlign: TextAlign.center,
+                  // Subtitle
+                  Text(
+                    'Get 1 free search to start',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(height: 8),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
 
-                    // Subtitle
-                    Text(
-                      'Get 1 free search to start',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
+                  // Apple Sign-In button or loading indicator
+                  if (_isLoading)
+                    LoadingWidgets.centered()
+                  else
+                    _buildAppleSignInButton(),
+                  const SizedBox(height: 24),
+
+                  // Info text about Apple Sign-In
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightPink.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 40),
-
-                    // Email field
-                    CustomTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'Enter your email',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        // Proper email validation regex
-                        final emailRegex = RegExp(
-                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                        );
-                        if (!emailRegex.hasMatch(value.trim().toLowerCase())) {
-                          return 'Please enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password field
-                    CustomTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hint: 'At least 6 characters',
-                      obscureText: _obscurePassword,
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      onSuffixTap: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Confirm password field
-                    CustomTextField(
-                      controller: _confirmPasswordController,
-                      label: 'Confirm Password',
-                      hint: 'Re-enter your password',
-                      obscureText: _obscureConfirmPassword,
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      onSuffixTap: () {
-                        setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Sign up button
-                    if (_isLoading)
-                      LoadingWidgets.centered()
-                    else
-                      CustomButton(
-                        text: 'Sign Up',
-                        onPressed: _handleSignUp,
-                      ),
-                    const SizedBox(height: 16),
-
-                    // Login link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
                       children: [
-                        Text(
-                          'Already have an account? ',
-                          style: TextStyle(color: Colors.grey[600]),
+                        Icon(
+                          Icons.security,
+                          color: AppColors.primaryPink,
+                          size: 20,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          },
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Text(
-                            'Log In',
+                            'Sign in with Apple keeps your information private and secure.',
                             style: TextStyle(
-                              color: AppColors.primaryPink,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Colors.grey[700],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Login link for existing users
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        child: Text(
+                          'Log In',
+                          style: TextStyle(
+                            color: AppColors.primaryPink,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Build the Apple Sign-In button
+  ///
+  /// Uses the official SignInWithAppleButton widget which follows
+  /// Apple's Human Interface Guidelines for the button appearance.
+  Widget _buildAppleSignInButton() {
+    if (!_isAppleAvailable) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          'Apple Sign-In is not available on this device',
+          style: TextStyle(color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return SignInWithAppleButton(
+      onPressed: _handleAppleSignIn,
+      style: SignInWithAppleButtonStyle.black,
+      borderRadius: BorderRadius.circular(12),
+      height: 50,
     );
   }
 }

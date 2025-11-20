@@ -35,6 +35,10 @@ dependencies:
   supabase_flutter: ^2.3.4
   purchases_flutter: ^9.9.4
 
+  # Apple Sign-In
+  sign_in_with_apple: ^6.1.0
+  crypto: ^3.0.3
+
   # Date formatting
   intl: ^0.19.0
 
@@ -58,6 +62,9 @@ dependencies:
   google_fonts: ^6.1.0
   flutter_animate: ^4.5.0
   shimmer: ^3.0.0
+
+  # Image picker for reverse image search
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

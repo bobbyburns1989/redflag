@@ -93,6 +93,24 @@ Access to public safety information should be easy, anonymous, and ethically gui
 - **Loading states** for better UX
 - **Note**: Both first and last names are required to improve search accuracy and reduce false positives
 
+### 2b. 🖼️ Reverse Image Search
+- **Catfish/Scam Detection**: Check if a photo appears elsewhere online
+- **Multiple Input Methods**:
+  - Camera capture
+  - Gallery selection
+  - Image URL input
+- **Powered by TinEye API**: Searches billions of indexed images
+- **Results Display**:
+  - Number of matches found
+  - List of domains where image appears
+  - Direct links to source pages
+  - Crawl dates for each match
+- **Use Cases**:
+  - Verify if a photo is original or stolen
+  - Detect fake profiles using stock photos
+  - Identify catfishing attempts
+- **Cost**: 1 credit per search (same as name search)
+
 ### 3. 📋 Results Display
 - **Clean card-based UI** for each potential match
 - **Detailed Information**:
@@ -274,9 +292,15 @@ redflag/
 ### Data Flow
 
 ```
+Name Search:
 User Input → Flutter App → FastAPI Backend → Offenders.io API
                                           ↓
 User Display ← Results Screen ← API Service ← JSON Response
+
+Image Search:
+Image Upload → Flutter App → FastAPI Backend → TinEye API
+                                            ↓
+User Display ← Results Screen ← API Service ← Match Results
 ```
 
 ## 🔑 API Configuration
@@ -302,7 +326,20 @@ User Display ← Results Screen ← API Service ← JSON Response
 OFFENDERS_IO_API_KEY=your_actual_api_key_here
 ```
 
-#### 2. CrimeoMeter (Fallback - Optional)
+#### 2. TinEye (Reverse Image Search)
+
+- **Coverage**: Billions of indexed images worldwide
+- **Features**: Find where images appear online
+- **Sign Up**: https://services.tineye.com/TinEyeAPI
+- **Cost**: $200 for 5,000 searches (starter bundle)
+
+**Configuration:**
+
+```env
+TINEYE_API_KEY=your_tineye_api_key_here
+```
+
+#### 3. CrimeoMeter (Fallback - Optional)
 
 - **Coverage**: United States
 - **Features**: Name + ZIP search
@@ -322,6 +359,9 @@ CRIMEOMETER_API_KEY=your_crimeometer_key  # Optional
 ```env
 # Primary API
 OFFENDERS_IO_API_KEY=your_offenders_io_key_here
+
+# Reverse Image Search API
+TINEYE_API_KEY=your_tineye_api_key_here
 
 # Fallback API (optional)
 CRIMEOMETER_API_KEY=your_crimeometer_key_here

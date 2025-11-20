@@ -122,51 +122,72 @@ class _ResultsScreenState extends State<ResultsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.palePink,
       appBar: AppBar(
-        title: const Text('Search Results'),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: AppColors.appBarGradient),
+        title: Text(
+          'Search Results',
+          style: TextStyle(
+            color: AppColors.primaryPink,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: AppColors.darkText,
         actions: [
           if (widget.searchResult.hasResults)
             IconButton(
-              icon: const Icon(Icons.filter_list),
+              icon: Icon(Icons.filter_list_rounded, color: AppColors.primaryPink),
               onPressed: _showFilterSheet,
               tooltip: 'Sort & Filter',
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: AppColors.softPink.withValues(alpha: 0.5),
+            height: 1,
+          ),
+        ),
       ),
       body: Column(
         children: [
-          // Search summary with animated counter
+          // Search summary with animated counter - floating card style
           Container(
-            width: double.infinity,
-            padding: AppSpacing.cardPaddingAll,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.lightPink,
-              border: Border(
-                bottom: BorderSide(color: AppColors.softPink, width: 1),
-              ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Search: "${widget.searchResult.query}"',
-                  style: AppTextStyles.h4.copyWith(
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.primaryPink,
                   ),
                 ),
-                AppSpacing.verticalSpaceXs,
+                const SizedBox(height: 4),
                 AnimatedBuilder(
                   animation: _counterAnimation,
                   builder: (context, child) {
                     return Text(
                       '${_counterAnimation.value} ${_counterAnimation.value == 1 ? 'result' : 'results'} found',
-                      style: AppTextStyles.bodyMedium.copyWith(
+                      style: TextStyle(
+                        fontSize: 14,
                         color: AppColors.mediumText,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     );
                   },
@@ -175,25 +196,25 @@ class _ResultsScreenState extends State<ResultsScreen>
             ),
           ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.2, end: 0),
 
-          // Important disclaimer
+          // Important disclaimer - softer styling
           Container(
-                margin: AppSpacing.screenPaddingAll,
-                padding: AppSpacing.cardPaddingAll,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.warningRose,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.rose, width: 1.5),
+                  color: AppColors.lightPink.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning, color: AppColors.deepPink, size: 24),
-                    AppSpacing.horizontalSpaceSm,
+                    Icon(Icons.info_outline_rounded, color: AppColors.primaryPink, size: 20),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'These are potential matches only. Names may belong to different people. Verify independently.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.deepPink,
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mediumText,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -203,6 +224,8 @@ class _ResultsScreenState extends State<ResultsScreen>
               .animate()
               .fadeIn(duration: 400.ms, delay: 100.ms)
               .slideY(begin: -0.2, end: 0),
+
+          const SizedBox(height: 8),
 
           // Results list or empty state with pull-to-refresh
           Expanded(
