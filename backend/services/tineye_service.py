@@ -84,46 +84,56 @@ class TinEyeService:
         """
         Transform TinEye API response into standardized format.
 
-        The TinEye response object contains:
-        - total_results: Total number of matches
-        - matches: List of match objects with backlinks
-
+        The TinEye response object contains matches with backlinks.
         We extract the most useful information for the user.
         """
         results = []
+        total_backlinks = 0
 
         # Process each match
-        for match in response.matches:
+        matches = getattr(response, 'matches', []) or []
+        for match in matches:
             # Each match can have multiple backlinks (pages where image appears)
-            for backlink in match.backlinks:
+            backlinks = getattr(match, 'backlinks', []) or []
+            total_backlinks += len(backlinks)
+
+            for backlink in backlinks:
                 # Extract domain from URL since Backlink object doesn't have domain attribute
                 try:
-                    domain = urlparse(backlink.url).netloc if backlink.url else "Unknown"
+                    url = getattr(backlink, 'url', '') or ''
+                    domain = urlparse(url).netloc if url else "Unknown"
                 except Exception:
                     domain = "Unknown"
 
                 results.append({
                     "domain": domain,
-                    "page_url": backlink.url,
-                    "image_url": backlink.backlink,
-                    "crawl_date": backlink.crawl_date.isoformat() if backlink.crawl_date else None,
+                    "page_url": getattr(backlink, 'url', ''),
+                    "image_url": getattr(backlink, 'backlink', ''),
+                    "crawl_date": backlink.crawl_date.isoformat() if getattr(backlink, 'crawl_date', None) else None,
                 })
 
         # Remove duplicates by page_url while preserving order
         seen_urls = set()
         unique_results = []
         for result in results:
-            if result["page_url"] not in seen_urls:
+            if result["page_url"] and result["page_url"] not in seen_urls:
                 seen_urls.add(result["page_url"])
                 unique_results.append(result)
 
+        # Get total results - try different attribute names
+        total_results = (
+            getattr(response, 'total_results', None) or
+            getattr(response, 'total_matches', None) or
+            len(matches)
+        )
+
         return {
-            "total_matches": response.total_results,
-            "total_backlinks": response.total_backlinks,
+            "total_matches": total_results,
+            "total_backlinks": total_backlinks,
             "results": unique_results[:50],  # Limit to first 50 results
             "stats": {
-                "total_results": response.total_results,
-                "total_backlinks": response.total_backlinks,
+                "total_results": total_results,
+                "total_backlinks": total_backlinks,
             }
         }
 
