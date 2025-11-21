@@ -120,21 +120,16 @@ class TinEyeService:
                 seen_urls.add(result["page_url"])
                 unique_results.append(result)
 
-        # Get total results - try different attribute names
-        total_results = (
-            getattr(response, 'total_results', None) or
-            getattr(response, 'total_matches', None) or
-            len(matches)
-        )
+        # Get stats from response.stats dictionary
+        stats = getattr(response, 'stats', {}) or {}
+        total_results = stats.get('total_results', len(matches))
+        total_backlinks_from_stats = stats.get('total_backlinks', total_backlinks)
 
         return {
             "total_matches": total_results,
-            "total_backlinks": total_backlinks,
+            "total_backlinks": total_backlinks_from_stats,
             "results": unique_results[:50],  # Limit to first 50 results
-            "stats": {
-                "total_results": total_results,
-                "total_backlinks": total_backlinks,
-            }
+            "stats": stats
         }
 
     async def get_remaining_searches(self) -> int:
