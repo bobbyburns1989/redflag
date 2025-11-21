@@ -1,8 +1,8 @@
 # Pink Flag - Developer Guide
 
 > **Last Updated**: November 20, 2025
-> **Current Version**: 1.1.3 (Build 9) - Reverse Image Search
-> **Status**: Production Ready - TinEye integration, UI revamp, full feature set
+> **Current Version**: 1.1.4 (Build 10) - Reverse Image Search + Bug Fixes
+> **Status**: Production Ready - TinEye integration, Apple Sign-In, full feature set
 > **Code Quality**: Production-ready (0 errors, 0 warnings, 39 info notices)
 > **Device Support**: iPhone only (iPad removed in v1.0.1)
 > **New Feature**: Reverse image search for catfish/scam detection via TinEye API
@@ -51,6 +51,7 @@
 11. **🐛 BUG FIXES** (Nov 19, 2025): **v1.1.2** - Fixed auth persistence (users skip onboarding on return), extended purchase timeout (21s→78s), credit counter auto-updates
 12. **🎨 UI REVAMP** (Nov 20, 2025): Modern/minimal aesthetic overhaul of Search and Results screens - white AppBars, floating cards, softer styling, outlined icons
 13. **🖼️ IMAGE SEARCH** (Nov 20, 2025): **v1.1.3** - Added reverse image search with TinEye API integration for catfish/scam detection - camera, gallery, or URL input
+14. **🔧 BUG FIXES** (Nov 20, 2025): **v1.1.4** - Fixed TinEye response parsing, image content type detection, Apple Sign-In Supabase configuration
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)
@@ -445,39 +446,55 @@ pytest tests/ -v                   # Run tests (when implemented)
 - **Offenders.io API key is required** for real data
 - Get key at: https://offenders.io
 - Add to `backend/.env`: `OFFENDERS_IO_API_KEY=your_key_here`
+- **TinEye API key is required** for reverse image search
+- Add to `backend/.env`: `TINEYE_API_KEY=your_key_here`
+- Set on Fly.io: `flyctl secrets set TINEYE_API_KEY=your_key_here`
 - **Never commit `.env` files** (already in .gitignore)
 
-### 3. Network Configuration
+### 4. Apple Sign-In Setup (Supabase)
+To enable Apple Sign-In, configure Supabase Authentication:
+
+1. **Supabase Dashboard** → Authentication → Providers → Apple
+2. **Client IDs**: `com.pinkflag.app` (must match your Bundle ID)
+3. **Secret Key**: Leave empty for native iOS apps
+4. **Allow users without an email**: Enable (for privacy)
+
+Also required in Apple Developer Portal:
+1. **Identifiers** → `com.pinkflag.app` → Enable "Sign in with Apple" capability
+2. **Keys** → Create key with "Sign in with Apple" enabled
+3. App entitlements file must have: `com.apple.developer.applesignin` (already configured)
+
+### 5. Network Configuration
 - **Production**: App uses `https://pink-flag-api.fly.dev/api` (already configured)
 - **Local Development**: Change to `http://localhost:8000/api` in `api_service.dart:9`
 - **Android Emulator Local Dev**: Use `http://10.0.2.2:8000/api` instead
 - Backend is deployed on Fly.io and auto-scales (see PRODUCTION_BACKEND_INFO.md)
 
-### 4. Last Name Field
+### 6. Last Name Field
 - **Changed from optional to required** (November 2025)
 - Backend requires it: `lastName: str` (not Optional)
 - Frontend validates min 2 characters
 - Reason: Improves search accuracy, reduces false positives
 
-### 5. Age and State Filtering
+### 7. Age and State Filtering
 - **Post-filtering on backend** (not passed to external API)
 - Age: Filters results within ±5 years
 - State: Case-insensitive exact match
 - May reduce result count significantly
 
-### 6. Layout Philosophy
+### 8. Layout Philosophy
 - **Single-screen design** is critical - no scrolling
 - Use compact spacing (10px between fields)
 - Hide character counters with `counterText: ''`
 - Test on smallest supported device (iPhone SE)
 
-### 7. Color Theme
+### 9. Color Theme
 - All colors defined in `app_colors.dart`
 - Use `AppColors.primaryPink`, not hardcoded hex values
 - Gradients available: `pinkGradient`, `appBarGradient`
 - Shadows available: `softPinkShadow`
 
-### 8. Git Workflow
+### 10. Git Workflow
 - Two commits ahead of origin/main (as of Nov 2025):
   - `c01dd47`: Pink Flag rebranding + Age/State fields
   - `f07e2e3`: Single-screen layout optimization
@@ -494,6 +511,13 @@ pytest tests/ -v                   # Run tests (when implemented)
 - [ ] No integration tests yet
 - [ ] Refactored store_screen needs testing before deployment
 - [ ] Refactored auth_service needs testing before deployment
+
+### Recently Fixed (Nov 20, 2025) - v1.1.4 Bug Fixes
+- ✅ **TinEye Response Parsing**: Fixed `'Backlink' object has no attribute 'domain'` - extract domain from URL using urlparse
+- ✅ **TinEye Stats Access**: Fixed `'TinEyeResponse' object has no attribute 'total_results'` - stats are in `response.stats` dict, not directly on response
+- ✅ **Image Content Type**: Fixed `Unsupported image type: application/octet-stream` - explicitly set content type based on file extension using `http_parser.MediaType`
+- ✅ **Apple Sign-In**: Configured Supabase with correct Client ID (`com.pinkflag.app`) and setup guide documented
+- ✅ **Files Modified**: `backend/services/tineye_service.py`, `safety_app/lib/services/image_search_service.dart`
 
 ### Recently Fixed (Nov 20, 2025) - UI Aesthetic Revamp
 - ✅ **Search Screen**: Modern/minimal redesign with white AppBar, floating card, softer styling
@@ -648,6 +672,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ## 📖 Release History
 
+- **v1.1.4** (Nov 20, 2025): Bug Fixes - TinEye response parsing, image content type, Apple Sign-In setup
 - **v1.1.3** (Nov 20, 2025): Reverse Image Search - TinEye API integration, catfish detection, UI revamp
 - **v1.1.2** (Nov 19, 2025): Bug fixes - Auth persistence, purchase timeout, credit counter
 - **v1.1.1** (Nov 18, 2025): Removed search history for Apple compliance
