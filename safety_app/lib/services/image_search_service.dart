@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/image_search_result.dart';
 import 'auth_service.dart';
@@ -144,11 +145,24 @@ class ImageSearchService {
       // Create multipart request
       var request = http.MultipartRequest('POST', uri);
 
-      // Add the image file
+      // Determine content type from file extension
+      final extension = imageFile.path.split('.').last.toLowerCase();
+      final contentType = switch (extension) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        _ => 'image/jpeg', // Default to jpeg
+      };
+
+      // Add the image file with explicit content type
+      final bytes = await imageFile.readAsBytes();
       request.files.add(
-        await http.MultipartFile.fromPath(
+        http.MultipartFile.fromBytes(
           'image',
-          imageFile.path,
+          bytes,
+          filename: imageFile.path.split('/').last,
+          contentType: MediaType.parse(contentType),
         ),
       );
 
