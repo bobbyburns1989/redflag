@@ -13,6 +13,7 @@ Returns structured results with domains, URLs, and crawl dates where the image w
 
 import os
 from typing import List, Dict, Any, Optional
+from urllib.parse import urlparse
 from pytineye import TinEyeAPIRequest
 
 
@@ -95,8 +96,14 @@ class TinEyeService:
         for match in response.matches:
             # Each match can have multiple backlinks (pages where image appears)
             for backlink in match.backlinks:
+                # Extract domain from URL since Backlink object doesn't have domain attribute
+                try:
+                    domain = urlparse(backlink.url).netloc if backlink.url else "Unknown"
+                except Exception:
+                    domain = "Unknown"
+
                 results.append({
-                    "domain": backlink.domain,
+                    "domain": domain,
                     "page_url": backlink.url,
                     "image_url": backlink.backlink,
                     "crawl_date": backlink.crawl_date.isoformat() if backlink.crawl_date else None,
