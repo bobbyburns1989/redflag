@@ -16,6 +16,7 @@ import '../widgets/page_transitions.dart';
 import '../widgets/search/credit_badge.dart';
 import '../widgets/search/search_tab_bar.dart';
 import '../widgets/search/search_error_banner.dart';
+import '../widgets/search/phone_search_form.dart';
 import 'results_screen.dart';
 import 'image_results_screen.dart';
 import 'phone_results_screen.dart';
@@ -776,104 +777,12 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ] else if (_searchMode == 1) ...[
                     // ======== PHONE SEARCH FORM ========
-                    // Info banner
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.palePink,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: AppColors.primaryPink,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Find caller name and details for any phone number',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.mediumText,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Phone number input
-                    CustomTextField(
-                      controller: _phoneNumberController,
-                      label: 'Phone Number *',
-                      hint: '(555) 123-4567',
-                      prefixIcon: Icons.phone,
-                      keyboardType: TextInputType.phone,
-                      showClearButton: true,
-                      textCapitalization: TextCapitalization.none,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Format help text
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.palePink,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.lightbulb_outline,
-                            size: 16,
-                            color: AppColors.primaryPink,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Enter 10-digit US phone number',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.mediumText,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    SearchErrorBanner(errorMessage: _errorMessage),
-
-                    // Search button
-                    CustomButton(
-                      text: 'Search Phone Number',
-                      onPressed: _performPhoneSearch,
-                      variant: ButtonVariant.primary,
-                      size: ButtonSize.large,
-                      icon: Icons.search,
+                    PhoneSearchForm(
+                      phoneNumberController: _phoneNumberController,
+                      onSearch: _performPhoneSearch,
+                      onClear: _clearPhoneForm,
+                      errorMessage: _errorMessage,
                       isLoading: _isLoading,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Clear button
-                    CustomButton(
-                      text: 'Clear',
-                      onPressed: _isLoading ? null : _clearPhoneForm,
-                      variant: ButtonVariant.text,
-                      size: ButtonSize.medium,
-                      icon: Icons.refresh_rounded,
                     ),
                   ] else ...[
                     // ======== IMAGE SEARCH FORM ========
