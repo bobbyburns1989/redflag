@@ -85,10 +85,10 @@ class AppConfig {
   static const String APP_TAGLINE = 'Stay Safe, Stay Aware';
 
   /// App version (must match pubspec.yaml)
-  static const String APP_VERSION = '1.1.4';
+  static const String APP_VERSION = '1.1.8';
 
   /// App build number
-  static const String BUILD_NUMBER = '10';
+  static const String BUILD_NUMBER = '14';
 
   // ==================== CREDIT PACKAGES ====================
 
@@ -102,6 +102,19 @@ class AppConfig {
 
   /// Credits per search
   static const int CREDITS_PER_SEARCH = 1;
+
+  // ==================== PHONE LOOKUP API (Sent.dm) ====================
+
+  /// Sent.dm Phone Lookup API key
+  /// Sign up at: https://www.sent.dm
+  /// Get API key from: https://www.sent.dm/dashboard
+  static const String SENTDM_API_KEY = '20d69ba0-03ef-410e-bce7-6ac91c5b9eb9';
+
+  /// Sent.dm API base URL
+  static const String SENTDM_API_URL = 'https://www.sent.dm/api/phone-lookup';
+
+  /// Phone lookup rate limit (15 requests per minute)
+  static const int PHONE_LOOKUP_RATE_LIMIT = 15;
 
   // ==================== HELPER METHODS ====================
 

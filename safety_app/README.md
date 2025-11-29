@@ -1,116 +1,234 @@
 # Pink Flag
 
-A Flutter-based safety application for searching and viewing offender registry information with a modern, user-friendly interface.
+A Flutter-based women's safety application for comprehensive background searches including name lookups, phone lookups, and reverse image searches with automatic credit management and refund protection.
 
 ## Overview
 
-Pink Flag is a mobile application designed to help users search public offender registries through an intuitive, aesthetically pleasing interface. The app features a feminine pink theme and provides easy access to registry data with enhanced search capabilities.
+Pink Flag is a mobile safety app that helps users perform background checks through multiple search methods. The app features a feminine pink theme, credit-based monetization, and automatic refund protection for API failures.
 
 ## Features
 
-### Core Functionality
-- **Name-based Search**: Search registry by first and last name (both required)
-- **Advanced Filters**: Optional filters including age, state, phone number, and ZIP code
-- **Results Display**: View detailed offender information cards with location data
-- **Onboarding**: First-time user experience with feature highlights
-- **Resources**: Access to safety resources and support information
+### Search Capabilities
+- **Name Search**: Search by first/last name with optional filters (age, state, phone, ZIP)
+- **Phone Lookup**: Reverse phone number lookup with caller ID, carrier info, and fraud risk assessment
+- **Image Search**: Reverse image search using TinEye API to find where photos appear online
+- **Advanced Filters**: State, age, phone number, and ZIP code filters for name searches
+- **Fraud Risk Assessment**: Color-coded risk levels (safe/medium/high) for phone lookups
+
+### Credit System
+- **Pay-Per-Search**: 1 credit per search across all search types
+- **RevenueCat Integration**: In-app purchases (3, 10, or 25 credits)
+- **Real-Time Balance**: Credit counter updates instantly
+- **Transaction History**: View all purchases and searches
+- **Search History**: Review past searches with privacy controls
+
+### 🔄 Automatic Credit Refund System (v1.1.7)
+**NEW!** Automatic refunds when searches fail due to API/server issues:
+- **Auto Refund**: 503 (maintenance), 500/502/504 (server errors), 429 (rate limit), timeouts, network errors
+- **Instant Processing**: Credits returned immediately, no user action required
+- **Full Transparency**: Refunds shown in transaction history with reason
+- **UI Indicators**: Refund badges (🔄) in both transaction and search history
+- **No Refund**: Client errors (400, invalid input) or successful searches
 
 ### User Interface
 - **Modern Pink Theme**: Cohesive feminine aesthetic with gradient accents
+- **3-Tab Search Interface**: Name, Phone, Image search in segmented control
 - **Custom Splash Screen**: Branded launch experience
 - **Smooth Animations**: Page transitions with slide and fade effects
-- **Responsive Design**: Optimized layouts that fit on single screens without scrolling
-- **Bottom Navigation**: Easy access to search, results, and resources
+- **Bottom Navigation**: Search, Resources, Settings screens
+- **Pull-to-Refresh**: Update credit balance and history
+- **Loading States**: Shimmer effects and progress indicators
+
+### Settings & Account Management
+- **Account**: Email display, change password, sign out
+- **Credits**: Buy more credits, restore purchases
+- **History**: Transaction history, search history with privacy notice
+- **Legal**: Privacy policy, terms of service, about page
+- **Account Deletion**: Delete account option
+
+### Authentication
+- **Supabase Auth**: Email/password authentication
+- **Apple Sign-In**: One-tap login for iOS users
+- **Onboarding**: 5-page feature introduction for new users
 
 ## 📋 Current Status
 
+**Version**: 1.1.7+13 (November 28, 2025)
+
 **See [CURRENT_STATUS.md](../CURRENT_STATUS.md) for detailed development status including:**
 - ✅ Backend deployed to Fly.io (production ready)
-- ⚠️ RevenueCat temporarily disabled (build issue)
-- 📊 Project timeline and next steps
+- ✅ RevenueCat FIXED and fully operational
+- ✅ Phone lookup feature complete
+- ✅ Credit refund system implemented
+- ✅ Settings screen complete
+- ⏳ Testing pending (Sent.dm API currently in maintenance)
 
 ## Recent Updates
 
-### Version 1.3 (November 7, 2025)
+### Version 1.1.7 (November 28, 2025) - Credit Refund System 🔄
 
-#### Backend Deployment
-- **Production API Deployed**: Backend now live at `https://pink-flag-api.fly.dev`
-- **Platform**: Fly.io with auto-scaling and free tier
-- **Integration**: Updated `api_service.dart` to use production URL
-- **Testing**: Health check and search endpoints verified working
+**Major Feature: Automatic Credit Refund Protection**
+- Automatic credit refunds for API/server failures across all search types
+- Refund policy: 503, 500, 502, 504, 429, timeouts, network errors
+- Transaction history shows refunds with green 🔄 icon and reason
+- Search history displays refund badges for failed searches
+- Instant processing via Supabase RPC function
 
-#### Monetization Status
-- **RevenueCat Configured**: API key added, products created
-- **Known Issue**: iOS build error with purchases_flutter (temporarily disabled)
-- **Workaround**: Store screen disabled until CocoaPods update completes
-- **Impact**: Core search functionality still operational
+**Phone Validation Fix**
+- Fixed US phone number validation for 10-digit format (no country code)
+- Improved E.164 formatting for international numbers
+- Better error messages for invalid phone numbers
 
-### Version 1.2.1 (November 6, 2025)
+**Database Updates**
+- New `refunded` column on searches table
+- `refund_credit_for_failed_search()` RPC function
+- Performance indexes for refund queries
+- Row Level Security policies updated
 
-#### Code Quality & Production Readiness
-- **Deprecation Fixes**: Migrated all 42 instances of deprecated `withOpacity()` to modern `withValues(alpha:)` API
-- **Code Analysis**: Achieved zero errors, zero warnings, zero info notices
-- **Documentation**: Added comprehensive App Store Release Guide (APP_STORE_RELEASE_GUIDE.md)
-- **Developer Onboarding**: Created Coding Guidelines for Claude Code AI assistant (CODING_GUIDELINES.md)
-- **Production Ready**: Codebase is now ready for App Store submission
+**Code Changes**
+- Phone search service: +130 lines of refund logic
+- Image search service: +120 lines of refund logic
+- Name search service: +80 lines of refund logic
+- Credit transaction model: +54 lines of display helpers
+- Transaction history UI: Refund display with green styling
+- Search history UI: Refund badges
+- Version bumped to 1.1.7+13
 
-### Version 1.2 (November 2025)
+**Documentation**
+- `CREDIT_REFUND_SYSTEM.md` - Complete architecture (460 lines)
+- `CREDIT_REFUND_SCHEMA.sql` - Database schema (200 lines)
+- `CREDIT_REFUND_ROADMAP.md` - Implementation plan (600 lines)
+- `RELEASE_NOTES_v1.1.7.md` - Comprehensive release notes (550+ lines)
 
-#### UI/UX Improvements
-- **Balanced Onboarding Buttons**: Next and Back buttons now have equal width for better visual balance (lib/screens/onboarding_screen.dart:141-179)
-- **Fixed Bottom Navigation Overflow**: Resolved 8-10 pixel overflow by adjusting container height and padding (lib/widgets/custom_bottom_nav.dart:77-78, 114, 142)
-- **Enhanced Text Field Labels**: Fixed floating label overlap with gradient borders by adding white background cutout (lib/widgets/custom_text_field.dart:163-168)
-- **Complete Location Display**: Added city and state to address information on result cards (lib/widgets/offender_card.dart:81-90, 146-168)
-- **Optimized Search Screen Layout**: Reduced spacing and padding throughout to fit collapsed form on single screen (lib/screens/search_screen.dart:180-430)
+**Status**: Implementation complete ✅ | Database schema ready for deployment | Testing pending when Sent.dm API is back online
 
-#### Technical Changes
-- Implemented `Expanded` widgets for equal-width button distribution
-- Added `floatingLabelStyle` with `backgroundColor` for Material Design label cutout
-- Created `_buildFullAddress()` method for smart null-safe address formatting
-- Replaced `AppSpacing` constants with precise `const SizedBox` values for space optimization
+### Version 1.1.5 (November 28, 2025) - Phone Lookup Feature 📱
+
+**Phone Number Reverse Lookup**
+- Integrated free Sent.dm API for phone lookups
+- Caller name (CNAM), carrier, line type, location data
+- Fraud risk assessment with color-coded risk levels
+- Phone number validation and E.164 formatting
+- Results screen with copy-to-clipboard functionality
+
+**Search Interface Update**
+- 3-tab segmented control: Name | Phone | Image
+- Consistent 1-credit cost across all search types
+- Phone search history tracking in database
+
+**Files Created**
+- `lib/models/phone_search_result.dart` (205 lines)
+- `lib/services/phone_search_service.dart` (279 lines)
+- `lib/screens/phone_results_screen.dart` (545 lines)
+- `PHONE_LOOKUP_IMPLEMENTATION.md` (462 lines)
+- `PHONE_LOOKUP_SCHEMA_UPDATE.sql` (53 lines)
+
+**Package Added**
+- `phone_numbers_parser: ^8.3.0` for phone validation
+
+### Version 1.1.4 (November 11, 2025) - Settings Enhancement
+
+**Transaction & Search History**
+- Transaction history screen with grouped entries by date
+- Search history screen with privacy notice and clear action
+- Change password flow integrated
+- Real-time credit balance updates
+
+**History Service**
+- `lib/services/history_service.dart` - Supabase fetch/clear helpers
+- `lib/models/credit_transaction.dart` - Transaction data model
+- `lib/models/search_history_entry.dart` - Search history model
+
+### Version 1.1.0 (November 10, 2025) - RevenueCat Fix & Settings
+
+**RevenueCat Build Error FIXED**
+- Upgraded to `purchases_flutter: ^9.9.4`
+- Updated CocoaPods to get `PurchasesHybridCommon 17.17.0`
+- iOS build successful (60.1s) with no errors
+- RevenueCat fully operational
+
+**Settings Screen Implemented**
+- Complete settings screen with 380 lines
+- Account management section
+- Credits display with buy/restore options
+- Transaction and search history access
+- Legal pages (privacy policy, terms of service)
+- Sign out and delete account options
+
+**RevenueCat Feature Flag Integration**
+- `lib/config/app_config.dart` - Centralized configuration
+- `USE_MOCK_PURCHASES` flag for easy mode switching
+- Mock purchases for rapid testing
+- Webhook Edge Function for RevenueCat integration
 
 ## Project Structure
 
 ```
 lib/
-├── main.dart                      # App entry point
+├── main.dart                                    # App entry point
+├── config/
+│   └── app_config.dart                         # Feature flags and configuration
 ├── models/
-│   ├── offender.dart             # Offender data model
-│   └── search_result.dart        # Search result wrapper
+│   ├── offender.dart                           # Offender data model
+│   ├── search_result.dart                      # Name search result wrapper
+│   ├── phone_search_result.dart                # Phone lookup result
+│   ├── image_search_result.dart                # Image search result
+│   ├── credit_transaction.dart                 # Transaction history model
+│   └── search_history_entry.dart               # Search history model
 ├── screens/
-│   ├── onboarding_screen.dart    # First-time user experience
-│   ├── home_screen.dart          # Main navigation hub
-│   ├── search_screen.dart        # Registry search interface
-│   ├── results_screen.dart       # Search results display
-│   └── resources_screen.dart     # Safety resources
+│   ├── splash_screen.dart                      # Branded splash screen
+│   ├── onboarding_screen.dart                  # 5-page onboarding flow
+│   ├── login_screen.dart                       # Email/password login
+│   ├── signup_screen.dart                      # User registration
+│   ├── home_screen.dart                        # Main navigation hub
+│   ├── search_screen.dart                      # 3-tab search (Name/Phone/Image)
+│   ├── results_screen.dart                     # Name search results
+│   ├── phone_results_screen.dart               # Phone lookup results
+│   ├── image_results_screen.dart               # Image search results
+│   ├── resources_screen.dart                   # Safety resources
+│   ├── settings_screen.dart                    # Settings hub
+│   ├── store_screen.dart                       # Credit purchase
+│   └── settings/
+│       ├── transaction_history_screen.dart     # Transaction history with refunds
+│       ├── search_history_screen.dart          # Search history with refund badges
+│       └── change_password_screen.dart         # Password change flow
 ├── services/
-│   └── api_service.dart          # API communication layer
+│   ├── api_service.dart                        # Name search API
+│   ├── phone_search_service.dart               # Phone lookup with refund logic
+│   ├── image_search_service.dart               # Image search with refund logic
+│   ├── search_service.dart                     # Name search with refund logic
+│   ├── auth_service.dart                       # Supabase authentication
+│   ├── history_service.dart                    # Transaction/search history
+│   └── revenuecat_service.dart                 # In-app purchases
 ├── theme/
-│   ├── app_colors.dart           # Color palette and gradients
-│   ├── app_text_styles.dart      # Typography styles
-│   └── app_spacing.dart          # Layout spacing constants
+│   ├── app_colors.dart                         # Pink color palette
+│   ├── app_text_styles.dart                    # Typography
+│   └── app_spacing.dart                        # Layout constants
 └── widgets/
-    ├── custom_button.dart        # Reusable button component
-    ├── custom_text_field.dart    # Form input component
-    ├── custom_bottom_nav.dart    # Navigation bar
-    ├── offender_card.dart        # Result card component
-    └── page_transitions.dart     # Animation helpers
+    ├── custom_button.dart                      # Reusable button
+    ├── custom_text_field.dart                  # Form input
+    ├── custom_card.dart                        # Card component
+    ├── custom_bottom_nav.dart                  # Bottom navigation
+    ├── custom_snackbar.dart                    # Toast notifications
+    ├── loading_widgets.dart                    # Loading states
+    ├── offender_card.dart                      # Result card
+    └── page_transitions.dart                   # Animations
 ```
 
 ## Getting Started
 
 ### Prerequisites
-- Flutter SDK (latest stable)
-- Dart SDK (included with Flutter)
-- iOS Simulator or Android Emulator
-- Xcode (for iOS development)
+- Flutter SDK 3.32.8 or later
+- Dart SDK 3.8.1 or later
+- Xcode 16.3 (for iOS development)
+- iOS 13.0+ deployment target
+- CocoaPods (for iOS dependencies)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd safety_app
+cd /Users/robertburns/Projects/RedFlag/safety_app
 ```
 
 2. Install dependencies:
@@ -118,7 +236,14 @@ cd safety_app
 flutter pub get
 ```
 
-3. Run the app:
+3. Install iOS pods:
+```bash
+cd ios
+pod install
+cd ..
+```
+
+4. Run the app:
 ```bash
 flutter run
 ```
@@ -131,6 +256,9 @@ flutter devices
 
 # Run on specific device
 flutter run -d <device-id>
+
+# Run on simulator named "333"
+flutter run -d 333
 ```
 
 ## Design System
@@ -141,55 +269,141 @@ flutter run -d <device-id>
 - **Soft Pink**: `#F8BBD0` - Borders and subtle elements
 - **Light Pink**: `#FCE4EC` - Backgrounds and highlights
 - **Rose**: `#F06292` - Secondary accents
+- **Green**: `#4CAF50` - Success and refund indicators
 
 ### Typography
+- **Google Fonts**: Roboto and Poppins
 - **Headings**: Bold, clear hierarchy
 - **Body**: Readable with appropriate line-height
 - **Captions**: Smaller informational text
-- **Overlines**: Section headers in uppercase
-
-### Spacing
-- Consistent padding and margins using `AppSpacing` constants
-- Recent optimizations use explicit values for precise control
-- Balanced vertical rhythm throughout screens
 
 ## API Integration
 
-The app integrates with a registry search API through the `ApiService` class:
+### Production Backend
+- **URL**: `https://pink-flag-api.fly.dev/api`
+- **Platform**: Fly.io (Python FastAPI)
+- **Endpoints**:
+  - `POST /api/search/name` - Name search (FastPeopleSearch via Offenders.io)
+  - `POST /api/image-search` - Image search (TinEye API)
+  - `GET /health` - Health check
 
-- **Production Endpoint**: `https://pink-flag-api.fly.dev/api`
-- **Backend**: Python FastAPI deployed on Fly.io
-- **Search Method**: `searchByName()` with optional filters
-- **Error Handling**: Custom `ApiException` with user-friendly messages
-- **Response Parsing**: Converts JSON to `SearchResult` and `Offender` models
-- **Timeout**: 30 seconds with retry functionality
-- **Health Check**: `/health` endpoint for monitoring
+### Phone Lookup API
+- **Provider**: Sent.dm (100% FREE)
+- **Rate Limit**: 15 requests/minute
+- **Coverage**: US, Canada, UK, International
+- **Endpoint**: `https://api.sent.dm/lookup`
+- **API Key**: Configured in `app_config.dart`
+
+### Supabase Backend
+- **Auth**: Email/password + Apple Sign-In
+- **Database**: PostgreSQL with Row Level Security
+- **Tables**: profiles, credit_transactions, searches
+- **RPC Functions**:
+  - `deduct_credit_for_search()` - Credit deduction
+  - `refund_credit_for_failed_search()` - Automatic refunds
+
+### RevenueCat
+- **Products**:
+  - `pink_flag_3_searches` - $1.99 (3 credits)
+  - `pink_flag_10_searches` - $4.99 (10 credits)
+  - `pink_flag_25_searches` - $9.99 (25 credits)
+- **API Key**: `appl_IRhHyHobKGcoteGnlLRWUFgnIos`
+- **Version**: purchases_flutter ^9.9.4
+
+## Credit Refund System
+
+### How It Works
+1. User performs search → Credit deducted → `searchId` tracked
+2. API call fails (503, 500, timeout, etc.) → Error detected
+3. `shouldRefund()` checks if error is refundable → Returns true
+4. `refundCredit()` calls Supabase RPC → Credit instantly refunded
+5. UI updates automatically → Shows refund badge
+
+### Refund Policy
+✅ **Automatic Refunds**:
+- 503 Service Unavailable (API maintenance)
+- 500/502/504 Server errors
+- 429 Rate limiting
+- Network timeouts
+- Connection failures
+- API authentication errors
+
+❌ **No Refunds**:
+- 400 Bad Request (invalid input)
+- 404 Not Found
+- User validation errors
+- Successful searches
+
+### UI Indicators
+- **Transaction History**: Green 🔄 icon, refund reason displayed
+- **Search History**: Small green "🔄 Refunded" badge
+- **Credit Display**: Balance updates immediately
 
 ## Testing
 
-The app includes comprehensive validation:
+### Validation Features
 - Form validation for required fields
-- Input sanitization for optional filters
-- Network error handling with retry functionality
+- Phone number validation (US & international)
+- Email validation for authentication
+- Input sanitization for search queries
+- Network error handling with retry
 - Null-safe data display
+
+### Error Handling
+- Custom exceptions: `ApiException`, `NetworkException`, `ServerException`, `InsufficientCreditsException`
+- User-friendly error messages
+- Automatic retry for network failures
+- Graceful degradation
 
 ## Known Issues
 
-### RevenueCat Build Error (Active)
-- **Issue**: Swift compiler error with 'SubscriptionPeriod' type ambiguity
-- **Cause**: iOS 18.4/Xcode 16.3 StoreKit changes conflict with PurchasesHybridCommon
-- **Status**: Temporarily disabled while resolving
-- **Workaround**: Store functionality commented out, core app still functional
-- **Fix**: Update to purchases_flutter ^9.9.4 (requires pod repo update)
-- **Details**: See [CURRENT_STATUS.md](../CURRENT_STATUS.md#known-issue-revenuecat-build-error)
+### Sent.dm API Status
+- **Current Status**: API in maintenance (503 errors)
+- **Impact**: Phone lookup temporarily unavailable
+- **Refund Protection**: Credits automatically refunded for failed phone searches
+- **ETA**: Unknown - monitoring API status
+
+## Configuration
+
+### Environment Variables
+- Supabase URL and Anon Key
+- Sent.dm API Key
+- RevenueCat API Key
+- Backend API URL
+
+### Feature Flags (`lib/config/app_config.dart`)
+```dart
+static const bool USE_MOCK_PURCHASES = true;  // Toggle for testing
+```
+
+## Documentation
+
+- **[CURRENT_STATUS.md](../CURRENT_STATUS.md)** - Development status and timeline
+- **[CREDIT_REFUND_SYSTEM.md](../CREDIT_REFUND_SYSTEM.md)** - Refund system architecture
+- **[CREDIT_REFUND_ROADMAP.md](../CREDIT_REFUND_ROADMAP.md)** - Implementation roadmap
+- **[RELEASE_NOTES_v1.1.7.md](../RELEASE_NOTES_v1.1.7.md)** - Version 1.1.7 release notes
+- **[PHONE_LOOKUP_IMPLEMENTATION.md](../PHONE_LOOKUP_IMPLEMENTATION.md)** - Phone lookup docs
+- **[REVENUECAT_INTEGRATION_GUIDE.md](../REVENUECAT_INTEGRATION_GUIDE.md)** - RevenueCat setup
+- **[SETTINGS_SCREEN_COMPLETE.md](../SETTINGS_SCREEN_COMPLETE.md)** - Settings screen docs
 
 ## Future Enhancements
 
-- Location-based proximity search
-- Save favorite searches
-- Push notifications for registry updates
-- Dark mode support
-- Accessibility improvements
+- **Search Features**:
+  - Location-based proximity search
+  - Save favorite searches
+  - Bulk search capabilities
+  - Export search results
+
+- **User Experience**:
+  - Dark mode support
+  - Accessibility improvements
+  - Push notifications for credits
+  - Offline mode for history
+
+- **Analytics**:
+  - Search analytics dashboard
+  - Credit usage reports
+  - Refund trend analysis
 
 ## Contributing
 
@@ -202,5 +416,15 @@ Proprietary - All rights reserved
 ## Acknowledgments
 
 - Flutter framework and community
+- Supabase for backend infrastructure
+- RevenueCat for monetization platform
+- Sent.dm for free phone lookup API
+- TinEye for reverse image search
+- Offenders.io for registry data access
 - Material Design guidelines
-- Public registry data providers
+
+---
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

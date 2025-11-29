@@ -4,11 +4,21 @@ import 'revenuecat_service.dart';
 import 'apple_auth_service.dart';
 
 /// Authentication service using Supabase Auth
+///
+/// **SECURITY POLICY**: Apple Sign-In ONLY (as of v1.1.8)
+/// - Email/password methods remain for backend compatibility
+/// - All UI flows enforce Apple Sign-In exclusively
+/// - This prevents credit abuse via unlimited email accounts
+/// - See APPLE_ONLY_AUTH_MIGRATION.md for details
 class AuthService {
   final _supabase = Supabase.instance.client;
   final _appleAuthService = AppleAuthService();
 
   /// Sign up with email/password
+  ///
+  /// **DEPRECATED**: Email signup has been removed from UI to prevent abuse.
+  /// This method remains for backend compatibility only.
+  /// All new signups must use Apple Sign-In.
   Future<AuthResult> signUp(String email, String password) async {
     try {
       if (kDebugMode) {
@@ -175,6 +185,10 @@ class AuthService {
   }
 
   /// Sign in with email/password
+  ///
+  /// **DEPRECATED**: Email login has been removed from UI to prevent abuse.
+  /// This method remains for backend compatibility only.
+  /// All logins should use Apple Sign-In.
   Future<AuthResult> signIn(String email, String password) async {
     try {
       final response = await _supabase.auth.signInWithPassword(
@@ -315,6 +329,43 @@ class AuthService {
       return AuthResult.failed(e.message);
     } catch (e) {
       return AuthResult.failed('Failed to send reset email: ${e.toString()}');
+    }
+  }
+
+  /// Change password after verifying the current password.
+  Future<AuthResult> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      return AuthResult.failed('User not authenticated');
+    }
+
+    try {
+      // Re-authenticate to ensure password is correct and session is fresh.
+      await _supabase.auth.signInWithPassword(
+        email: email,
+        password: currentPassword,
+      );
+    } on AuthException catch (e) {
+      return AuthResult.failed(
+        e.message.isNotEmpty ? e.message : 'Current password is incorrect',
+      );
+    } catch (e) {
+      return AuthResult.failed('Failed to verify current password');
+    }
+
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      return AuthResult.success(user);
+    } on AuthException catch (e) {
+      return AuthResult.failed(e.message);
+    } catch (e) {
+      return AuthResult.failed('Failed to change password');
     }
   }
 

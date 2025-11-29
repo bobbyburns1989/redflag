@@ -3,16 +3,14 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_text_field.dart';
 import '../widgets/custom_snackbar.dart';
 import '../widgets/loading_widgets.dart';
 
-/// Login screen with Apple Sign-In as primary option
+/// Login screen with Apple Sign-In as the ONLY option
 ///
-/// Apple Sign-In is the primary login method. Email/password is kept
-/// as a secondary option but hidden by default since no existing users
-/// have email accounts.
+/// Apple Sign-In is enforced to prevent credit abuse. Users cannot create
+/// multiple email accounts to get free credits since Apple IDs require
+/// phone verification or payment methods.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,28 +19,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _authService = AuthService();
 
-  bool _isLoading = false;
   bool _isAppleLoading = false;
-  bool _obscurePassword = true;
-  bool _showEmailLogin = false; // Hidden by default
   bool _isAppleAvailable = true;
 
   @override
   void initState() {
     super.initState();
     _checkAppleAvailability();
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   /// Check if Apple Sign-In is available
@@ -79,85 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
         CustomSnackbar.showError(context, result.error ?? 'Sign in failed');
       }
     }
-  }
-
-  /// Handle email/password login
-  Future<void> _handleEmailLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    final result = await _authService.signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result.success) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      CustomSnackbar.showError(context, result.error ?? 'Login failed');
-    }
-  }
-
-  /// Handle forgot password
-  Future<void> _handleForgotPassword() async {
-    final emailController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter your email to receive a password reset link.'),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: emailController,
-              label: 'Email',
-              hint: 'Enter your email',
-              keyboardType: TextInputType.emailAddress,
-              prefixIcon: Icons.email_outlined,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Send Reset Link'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && emailController.text.isNotEmpty) {
-      final result =
-          await _authService.resetPassword(emailController.text.trim());
-
-      if (!mounted) return;
-
-      if (result.success) {
-        CustomSnackbar.showSuccess(
-          context,
-          'Password reset link sent! Check your email.',
-        );
-      } else {
-        CustomSnackbar.showError(
-          context,
-          result.error ?? 'Failed to send reset link',
-        );
-      }
-    }
-
-    emailController.dispose();
   }
 
   @override
@@ -213,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Apple Sign-In button (primary)
+                  // Apple Sign-In button (only option)
                   if (_isAppleLoading)
                     LoadingWidgets.centered()
                   else if (_isAppleAvailable)
@@ -225,136 +131,34 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   const SizedBox(height: 24),
 
-                  // Divider with "or"
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey[300])),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or',
-                          style: TextStyle(color: Colors.grey[500]),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey[300])),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Toggle for email login (secondary option)
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _showEmailLogin = !_showEmailLogin);
-                    },
+                  // Info text about Apple Sign-In
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightPink.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          _showEmailLogin
-                              ? 'Hide email login'
-                              : 'Log in with email',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
                         Icon(
-                          _showEmailLogin
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
-                          color: Colors.grey[600],
+                          Icons.security,
+                          color: AppColors.primaryPink,
                           size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Sign in with Apple keeps your information private and secure.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Email login form (collapsible)
-                  if (_showEmailLogin) ...[
-                    const SizedBox(height: 16),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // Email field
-                          CustomTextField(
-                            controller: _emailController,
-                            label: 'Email',
-                            hint: 'Enter your email',
-                            keyboardType: TextInputType.emailAddress,
-                            prefixIcon: Icons.email_outlined,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              final emailRegex = RegExp(
-                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                              );
-                              if (!emailRegex
-                                  .hasMatch(value.trim().toLowerCase())) {
-                                return 'Please enter a valid email address';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Password field
-                          CustomTextField(
-                            controller: _passwordController,
-                            label: 'Password',
-                            hint: 'Enter your password',
-                            obscureText: _obscurePassword,
-                            prefixIcon: Icons.lock_outline,
-                            suffixIcon: _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            onSuffixTap: () {
-                              setState(
-                                  () => _obscurePassword = !_obscurePassword);
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
-                              if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Forgot Password link
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: _handleForgotPassword,
-                              child: Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  color: AppColors.primaryPink,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Login button
-                          if (_isLoading)
-                            LoadingWidgets.centered()
-                          else
-                            CustomButton(
-                              text: 'Log In with Email',
-                              onPressed: _handleEmailLogin,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
                   // Sign up link
                   Row(

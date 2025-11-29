@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/search_service.dart';
 import '../services/image_search_service.dart';
+import '../services/phone_search_service.dart' as phone_service;
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -12,8 +13,12 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/dialogs/out_of_credits_dialog.dart';
 import '../widgets/page_transitions.dart';
+import '../widgets/search/credit_badge.dart';
+import '../widgets/search/search_tab_bar.dart';
+import '../widgets/search/search_error_banner.dart';
 import 'results_screen.dart';
 import 'image_results_screen.dart';
+import 'phone_results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -28,11 +33,13 @@ class _SearchScreenState extends State<SearchScreen> {
   final _lastNameController = TextEditingController();
   final _ageController = TextEditingController();
   final _stateController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _phoneController = TextEditingController(); // For name search filters
   final _zipCodeController = TextEditingController();
   final _urlController = TextEditingController();
+  final _phoneNumberController = TextEditingController(); // For phone search
   final _searchService = SearchService();
   final _imageSearchService = ImageSearchService();
+  final _phoneSearchService = phone_service.PhoneSearchService();
   final _imagePicker = ImagePicker();
 
   bool _isLoading = false;
@@ -41,7 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
   int _currentCredits = 0;
   StreamSubscription<int>? _creditsSubscription;
 
-  // Search mode: 0 = Name Search, 1 = Image Search
+  // Search mode: 0 = Name Search, 1 = Phone Search, 2 = Image Search
   int _searchMode = 0;
   File? _selectedImage;
 
@@ -117,6 +124,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _phoneController.dispose();
     _zipCodeController.dispose();
     _urlController.dispose();
+    _phoneNumberController.dispose();
     super.dispose();
   }
 
@@ -215,8 +223,9 @@ class _SearchScreenState extends State<SearchScreen> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _errorMessage = 'An unexpected error occurred');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -355,6 +364,79 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  void _clearPhoneForm() {
+    _phoneNumberController.clear();
+    setState(() {
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _performPhoneSearch() async {
+    final phoneNumber = _phoneNumberController.text.trim();
+
+    if (phoneNumber.isEmpty) {
+      setState(() => _errorMessage = 'Please enter a phone number');
+      return;
+    }
+
+    // Validate phone format offline first
+    if (!_phoneSearchService.validatePhoneFormat(phoneNumber)) {
+      setState(() => _errorMessage = 'Please enter a valid 10-digit US phone number');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _phoneSearchService.searchPhoneWithCredit(phoneNumber);
+
+      if (!mounted) return;
+
+      // Refresh credits
+      final updatedCredits = await _searchService.getCurrentCredits();
+      if (mounted) setState(() => _currentCredits = updatedCredits);
+
+      if (mounted) {
+        final callerName = result.callerName ?? 'Unknown';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Phone lookup complete: $callerName'),
+            backgroundColor: AppColors.primaryPink,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        Navigator.push(
+          context,
+          PageTransitions.slideAndFade(PhoneResultsScreen(result: result)),
+        );
+      }
+    } on phone_service.InsufficientCreditsException catch (e) {
+      if (mounted) {
+        final match = RegExp(r'You have (\d+) credits').firstMatch(e.message);
+        final credits = match != null ? int.parse(match.group(1)!) : 0;
+        setState(() => _currentCredits = credits);
+        showOutOfCreditsDialog(context, credits);
+      }
+    } on phone_service.PhoneSearchException catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
+    } on phone_service.RateLimitException catch (e) {
+      if (mounted) setState(() => _errorMessage = e.message);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = 'An unexpected error occurred');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _showOutOfCreditsDialog(int currentCredits) {
     showOutOfCreditsDialog(context, currentCredits);
   }
@@ -375,30 +457,7 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0,
         foregroundColor: AppColors.darkText,
         actions: [
-          // Credit balance display - refined pill design
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.lightPink,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.toll, size: 16, color: AppColors.primaryPink),
-                const SizedBox(width: 6),
-                Text(
-                  '$_currentCredits',
-                  style: TextStyle(
-                    color: AppColors.primaryPink,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          CreditBadge(credits: _currentCredits),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -429,123 +488,15 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Segmented Control
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.palePink,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _searchMode = 0),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _searchMode == 0
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: _searchMode == 0
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.person_search,
-                                    size: 16,
-                                    color: _searchMode == 0
-                                        ? AppColors.primaryPink
-                                        : AppColors.mediumText,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Name',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: _searchMode == 0
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      color: _searchMode == 0
-                                          ? AppColors.primaryPink
-                                          : AppColors.mediumText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _searchMode = 1),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _searchMode == 1
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: _searchMode == 1
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.image_search,
-                                    size: 16,
-                                    color: _searchMode == 1
-                                        ? AppColors.primaryPink
-                                        : AppColors.mediumText,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Image',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: _searchMode == 1
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      color: _searchMode == 1
-                                          ? AppColors.primaryPink
-                                          : AppColors.mediumText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  SearchTabBar(
+                    selectedMode: _searchMode,
+                    onModeChanged: (mode) => setState(() => _searchMode = mode),
                   ),
                   const SizedBox(height: 16),
 
                   // Conditional content based on search mode
                   if (_searchMode == 0) ...[
-                    // NAME SEARCH FORM
+                    // ======== NAME SEARCH FORM ========
                     // Disclaimer banner
                     Container(
                       decoration: BoxDecoration(
@@ -802,37 +753,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Error message
-                    if (_errorMessage != null) ...[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.palePink,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              color: AppColors.deepPink,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: TextStyle(
-                                  color: AppColors.deepPink,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                    SearchErrorBanner(errorMessage: _errorMessage),
 
                     // Search button - prominent
                     CustomButton(
@@ -853,8 +774,109 @@ class _SearchScreenState extends State<SearchScreen> {
                       size: ButtonSize.medium,
                       icon: Icons.refresh_rounded,
                     ),
+                  ] else if (_searchMode == 1) ...[
+                    // ======== PHONE SEARCH FORM ========
+                    // Info banner
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.palePink,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: AppColors.primaryPink,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Find caller name and details for any phone number',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.mediumText,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Phone number input
+                    CustomTextField(
+                      controller: _phoneNumberController,
+                      label: 'Phone Number *',
+                      hint: '(555) 123-4567',
+                      prefixIcon: Icons.phone,
+                      keyboardType: TextInputType.phone,
+                      showClearButton: true,
+                      textCapitalization: TextCapitalization.none,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Format help text
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.palePink,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            size: 16,
+                            color: AppColors.primaryPink,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Enter 10-digit US phone number',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.mediumText,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    SearchErrorBanner(errorMessage: _errorMessage),
+
+                    // Search button
+                    CustomButton(
+                      text: 'Search Phone Number',
+                      onPressed: _performPhoneSearch,
+                      variant: ButtonVariant.primary,
+                      size: ButtonSize.large,
+                      icon: Icons.search,
+                      isLoading: _isLoading,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Clear button
+                    CustomButton(
+                      text: 'Clear',
+                      onPressed: _isLoading ? null : _clearPhoneForm,
+                      variant: ButtonVariant.text,
+                      size: ButtonSize.medium,
+                      icon: Icons.refresh_rounded,
+                    ),
                   ] else ...[
-                    // IMAGE SEARCH FORM
+                    // ======== IMAGE SEARCH FORM ========
                     // Info banner
                     Container(
                       decoration: BoxDecoration(
@@ -1038,37 +1060,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // Error message
-                    if (_errorMessage != null) ...[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.palePink,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              color: AppColors.deepPink,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: TextStyle(
-                                  color: AppColors.deepPink,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                    SearchErrorBanner(errorMessage: _errorMessage),
 
                     // Search button
                     CustomButton(

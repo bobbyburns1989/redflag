@@ -297,7 +297,7 @@ packages:
     source: hosted
     version: "1.5.0"
   http_parser:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http_parser
       sha256: "178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571"
@@ -544,6 +544,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  phone_numbers_parser:
+    dependency: "direct main"
+    description:
+      name: phone_numbers_parser
+      sha256: "62451b689d842791ed1fd5dc9eacf36ffa8bad23a78ad6cde732dc2fb222fae2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.3.0"
   platform:
     dependency: transitive
     description:

@@ -2,7 +2,10 @@
 
 **Date**: November 10, 2025
 **Time**: ~45 minutes (Phase 1 Complete)
-**Status**: Basic Structure Implemented & Tested
+**Status**: Core structure implemented, polish pass complete, and Phase 2 history/account flows added
+
+**UI Polish**: Aesthetic refresh applied (AppBar/credits gradients, softened backgrounds, consistent typography, refined tiles, and danger zone styling)
+**Phase 2 Additions**: Transaction history screen, search history screen with privacy/clear option, and change password flow added from Settings
 
 ---
 
@@ -41,12 +44,9 @@
 ### ✅ Account Section
 ```dart
 - User avatar icon
-- Email display (bobbybobby@gmail.com)
-- Change Password button (placeholder)
-- Sign Out button (FULLY FUNCTIONAL)
-  - Shows confirmation dialog
-  - Signs out user
-  - Returns to onboarding screen
+- Email display
+- Change Password (full flow with validation and Supabase update)
+- Sign Out (confirmation, Supabase sign-out, return to onboarding)
 ```
 
 ### ✅ Credits & Purchases Section
@@ -56,13 +56,15 @@
   - Large credit number display
   - "searches remaining" text
 - Buy More Credits → navigates to Store screen
-- Restore Purchases (placeholder)
-- Transaction History (placeholder)
+- Restore Purchases
+- Transaction History (Supabase-driven list with grouping)
 ```
 
 ### ✅ Search History Section
 ```dart
-- View Past Searches (placeholder)
+- Search history screen with grouping (Today/Yesterday/date)
+- Privacy notice banner
+- Clear history action with confirmation
 ```
 
 ### ✅ Legal & Support Section
@@ -106,41 +108,36 @@
    - "Buy More Credits" button navigates to store
    - Store screen accessible from Settings
 
+5. **✅ Account Management**
+   - Change password flow with validation and Supabase update
+
+6. **✅ History**
+   - Transaction history screen with grouping and empty/error states
+   - Search history screen with privacy notice, grouping, and clear history action
+
 ---
 
 ## ⏳ What's Placeholder ("Coming Soon")
 
 Features with "Coming Soon" snackbars that need additional implementation:
 
-1. **Change Password**
-   - Needs: Password change form screen
-   - Supabase method: `supabase.auth.updateUser()`
-
-2. **Restore Purchases**
+1. **Restore Purchases**
    - Needs: RevenueCat restore implementation
    - Already have method in `RevenueCatService`
 
-3. **Transaction History**
-   - Needs: New screen to query `credit_transactions` table
-   - Query Supabase for user's purchase history
-
-4. **View Past Searches**
-   - Needs: New screen to query `searches` table
-   - Display user's search history with dates
-
-5. **Privacy Policy**
+2. **Privacy Policy**
    - Needs: Privacy policy content
    - Display in WebView or markdown
 
-6. **Terms of Service**
+3. **Terms of Service**
    - Needs: Terms content
    - Display in WebView or markdown
 
-7. **About Pink Flag**
+4. **About Pink Flag**
    - Needs: About screen with app info
    - Version, developer info, links
 
-8. **Delete Account**
+5. **Delete Account**
    - Needs: Confirmation flow (multi-step)
    - Delete from: searches, credit_transactions, profiles, auth
    - GDPR compliance

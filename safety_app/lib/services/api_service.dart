@@ -39,7 +39,7 @@ class ApiService {
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () => throw TimeoutException(
-              'Search request timed out. Please check your connection and try again.',
+              '⏱️ Request Timed Out\n\nThe search service didn\'t respond in time. Don\'t worry - your credit was automatically refunded!\n\nPlease check your internet connection and try again.',
             ),
           );
 
@@ -58,8 +58,14 @@ class ApiService {
           timestamp: DateTime.now(),
           totalResults: 0,
         );
+      } else if (response.statusCode == 503) {
+        throw ServerException(
+          '🔧 Service Under Maintenance\n\nThe search service is temporarily down for maintenance. Don\'t worry - your credit was automatically refunded!\n\nPlease try again in a few minutes.',
+        );
       } else if (response.statusCode >= 500) {
-        throw ServerException('Server error. Please try again later.');
+        throw ServerException(
+          '⚠️ Server Error\n\nThe search service is experiencing technical difficulties. Don\'t worry - your credit was automatically refunded!\n\nPlease try again in a few moments.',
+        );
       } else {
         throw ApiException(
           'Search failed. Please check your connection and try again.',
@@ -67,14 +73,16 @@ class ApiService {
       }
     } on SocketException {
       throw NetworkException(
-        'No internet connection. Please check your network settings.',
+        '📡 No Internet Connection\n\nCouldn\'t connect to the search service. No credit was charged.\n\nPlease check your network and try again.',
       );
     } on TimeoutException {
       rethrow;
     } on ServerException {
       rethrow;
-    } on http.ClientException catch (e) {
-      throw NetworkException('Connection failed: ${e.message}');
+    } on http.ClientException {
+      throw NetworkException(
+        '📡 Connection Failed\n\nCouldn\'t connect to the search service. No credit was charged.\n\nPlease check your network and try again.',
+      );
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Unexpected error occurred. Please try again.');
