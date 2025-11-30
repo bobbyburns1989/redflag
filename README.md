@@ -1,9 +1,10 @@
 # Pink Flag - Women's Safety App
 
-> A cross-platform Flutter mobile application for checking public sex offender registries through name search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
+> 🎉 **NOW LIVE ON THE APP STORE!** - A Flutter mobile application for checking public sex offender registries, phone lookups, and reverse image search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
 
-![Version](https://img.shields.io/badge/version-1.1.2-blue)
-![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey)
+![Version](https://img.shields.io/badge/version-1.1.8-blue)
+![Status](https://img.shields.io/badge/status-LIVE%20ON%20APP%20STORE-success)
+![Platform](https://img.shields.io/badge/platform-iOS-lightgrey)
 ![Flutter](https://img.shields.io/badge/Flutter-3.32.8-02569B?logo=flutter)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -28,15 +29,25 @@
 
 ## 🎯 Project Overview
 
-Pink Flag empowers women with access to public sex offender registry information through a user-friendly, anonymous mobile application. Stay Safe, Stay Aware.
+**Pink Flag v1.1.8 is LIVE on the Apple App Store!** 🎉
+
+Pink Flag empowers women with access to public sex offender registry information, phone number lookups, and reverse image search through a user-friendly mobile application. Stay Safe, Stay Aware.
+
+### 🚀 Production Status
+
+- ✅ **App Store**: LIVE and available for download (iOS)
+- ✅ **Backend**: Deployed on Fly.io (https://pink-flag-api.fly.dev)
+- ✅ **In-App Purchases**: Active via RevenueCat
+- ✅ **All Features**: Name search, Phone lookup, Image search operational
+- ✅ **Credit System**: Fully integrated with automatic refunds
 
 ### Key Principles
 
-- **🔒 Anonymous & Private**: No login, no tracking, no data collection
+- **🔒 Privacy First**: Apple Sign-In only, no data collection
 - **⚖️ Ethical by Design**: Prominent disclaimers prevent misuse
 - **🆘 Safety Resources**: Integrated emergency hotlines with tap-to-call
 - **🎯 Awareness, Not Vigilantism**: Clear guidance on proper use
-- **📱 Cross-Platform**: Native iOS and Android from single codebase
+- **💰 Fair Monetization**: Credit-based searches with automatic refunds for API failures
 
 ### Why This Matters
 

@@ -1,7 +1,7 @@
 # Pink Flag - Developer Guide
 
-> **Last Updated**: November 20, 2025
-> **Current Version**: 1.1.4 (Build 10) - Reverse Image Search + Bug Fixes
+> **Last Updated**: November 29, 2025
+> **Current Version**: 1.1.8 (Build 13) - Credit Refund System + Apple-Only Auth + Search Screen Refactoring
 > **Status**: Production Ready - TinEye integration, Apple Sign-In, full feature set
 > **Code Quality**: Production-ready (0 errors, 0 warnings, 39 info notices)
 > **Device Support**: iPhone only (iPad removed in v1.0.1)
@@ -52,6 +52,9 @@
 12. **🎨 UI REVAMP** (Nov 20, 2025): Modern/minimal aesthetic overhaul of Search and Results screens - white AppBars, floating cards, softer styling, outlined icons
 13. **🖼️ IMAGE SEARCH** (Nov 20, 2025): **v1.1.3** - Added reverse image search with TinEye API integration for catfish/scam detection - camera, gallery, or URL input
 14. **🔧 BUG FIXES** (Nov 20, 2025): **v1.1.4** - Fixed TinEye response parsing, image content type detection, Apple Sign-In Supabase configuration
+15. **🔄 CREDIT REFUND SYSTEM** (Nov 28, 2025): **v1.1.7** - Automatic credit refunds for API failures (503, 500, timeouts) across all search types
+16. **🔒 SECURITY** (Nov 28, 2025): **v1.1.8** - Removed email/password auth, Apple Sign-In only to prevent credit abuse
+17. **🔧 REFACTORING** (Jan 29, 2025): **Search Screen** - Refactored from 1,364 → 545 lines (60% reduction), extracted 6 reusable widgets
 
 ### What's Working
 - ✅ Splash screen with animations (2.5s delay → onboarding)

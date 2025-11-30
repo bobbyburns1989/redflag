@@ -70,6 +70,9 @@ dependencies:
   # Phone number validation & formatting
   phone_numbers_parser: ^8.3.0
 
+  # App information (version, build number)
+  package_info_plus: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_snackbar.dart';
 import '../widgets/loading_widgets.dart';
+import 'settings/about_screen.dart';
 import 'settings/change_password_screen.dart';
 import 'settings/delete_account_screen.dart';
 import 'settings/privacy_policy_screen.dart';
@@ -262,12 +263,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsTile(
                       icon: Icons.info_outline,
                       title: 'About Pink Flag',
-                      subtitle: 'Coming soon',
-                      comingSoon: true,
+                      subtitle: 'Version, credits, and more',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('About Pink Flag - Coming soon'),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AboutScreen(),
                           ),
                         );
                       },
