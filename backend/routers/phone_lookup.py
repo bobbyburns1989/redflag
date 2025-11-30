@@ -19,11 +19,15 @@ import httpx
 import re
 
 from middleware.auth import require_auth, get_current_user
+from services.credit_service import get_credit_service, InsufficientCreditsError
 
 router = APIRouter()
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
+# Initialize credit service
+credit_service = get_credit_service()
 
 # Get Sent.dm API key from environment
 SENTDM_API_KEY = os.getenv("SENTDM_API_KEY")
@@ -101,11 +105,19 @@ async def lookup_phone(
     # Get authenticated user ID
     user_id = get_current_user(request)
 
-    # TODO: Validate user has sufficient credits before performing lookup
-    # This will be implemented in the server-side credit validation phase
-
     try:
-        # Call Sent.dm API
+        # STEP 1: Validate and deduct credit BEFORE performing lookup
+        credit_result = await credit_service.check_and_deduct_credit(
+            user_id=user_id,
+            search_type="phone",
+            query=lookup_request.phone_number,
+            cost=1
+        )
+
+        search_id = credit_result["search_id"]
+        remaining_credits = credit_result["credits"]
+
+        # STEP 2: Call Sent.dm API
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get(
                 SENTDM_API_URL,
@@ -121,17 +133,27 @@ async def lookup_phone(
             # Handle non-success responses
             if response.status_code == 503:
                 # Service temporarily unavailable (maintenance)
-                # TODO: Trigger credit refund for this failed lookup
+                # Refund credit for service unavailability
+                await credit_service.refund_credit(
+                    user_id=user_id,
+                    search_id=search_id,
+                    reason="api_maintenance_503"
+                )
                 raise HTTPException(
                     status_code=503,
-                    detail="Phone lookup service is temporarily unavailable. Your credit will be refunded."
+                    detail="Phone lookup service is temporarily unavailable. Your credit has been refunded."
                 )
             elif response.status_code == 500:
                 # Server error
-                # TODO: Trigger credit refund for this failed lookup
+                # Refund credit for server error
+                await credit_service.refund_credit(
+                    user_id=user_id,
+                    search_id=search_id,
+                    reason="server_error_500"
+                )
                 raise HTTPException(
                     status_code=500,
-                    detail="Phone lookup service encountered an error. Your credit will be refunded."
+                    detail="Phone lookup service encountered an error. Your credit has been refunded."
                 )
             elif response.status_code == 429:
                 # Rate limit exceeded
@@ -168,30 +190,56 @@ async def lookup_phone(
                 metadata=data  # Store full response for debugging
             )
 
-            # TODO: After successful lookup, deduct 1 credit from user's account
-            # This will be implemented in the server-side credit validation phase
+            # STEP 3: Update search history with results
+            await credit_service.update_search_results(
+                search_id=search_id,
+                results_count=1,  # Phone lookups always return 1 result
+                search_type="phone"
+            )
 
             return result
 
     except httpx.TimeoutException:
-        # Network timeout
-        # TODO: Trigger credit refund for this failed lookup
+        # Network timeout - refund credit
+        await credit_service.refund_credit(
+            user_id=user_id,
+            search_id=search_id,
+            reason="request_timeout"
+        )
         raise HTTPException(
             status_code=504,
-            detail="Phone lookup request timed out. Your credit will be refunded."
+            detail="Phone lookup request timed out. Your credit has been refunded."
         )
+
     except httpx.NetworkError as e:
-        # Network error
-        # TODO: Trigger credit refund for this failed lookup
+        # Network error - refund credit
+        await credit_service.refund_credit(
+            user_id=user_id,
+            search_id=search_id,
+            reason="network_error"
+        )
         raise HTTPException(
             status_code=503,
-            detail=f"Network error during phone lookup. Your credit will be refunded."
+            detail=f"Network error during phone lookup. Your credit has been refunded."
         )
+
+    except InsufficientCreditsError:
+        # Re-raise credit errors as-is (already formatted)
+        raise
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
+
     except Exception as e:
-        # Unexpected error
+        # Unexpected error - refund credit if it was deducted
+        if 'search_id' in locals() and search_id:
+            await credit_service.refund_credit(
+                user_id=user_id,
+                search_id=search_id,
+                reason="unknown_error"
+            )
+
         print(f"Phone lookup error: {e}")
         raise HTTPException(
             status_code=500,

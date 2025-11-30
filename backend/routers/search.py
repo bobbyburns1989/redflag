@@ -5,12 +5,16 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from services.offender_api import OffenderAPIService
+from services.credit_service import get_credit_service, InsufficientCreditsError
 from middleware.auth import require_auth, get_current_user
 
 router = APIRouter()
 
 # Initialize rate limiter for this router
 limiter = Limiter(key_func=get_remote_address)
+
+# Initialize credit service
+credit_service = get_credit_service()
 
 # Lazy initialization to ensure environment variables are loaded first
 def get_offender_service():
@@ -53,13 +57,25 @@ async def search_by_name(
     **Note**: This endpoint requires the user to have sufficient credits.
     Credits are validated and deducted server-side before the search is performed.
     """
+    # Get authenticated user ID from request state
+    user_id = get_current_user(request)
+
+    # Create search query string for logging
+    query = f"{search_request.firstName} {search_request.lastName}"
+
     try:
-        # Get authenticated user ID from request state
-        user_id = get_current_user(request)
+        # STEP 1: Validate and deduct credit BEFORE performing search
+        credit_result = await credit_service.check_and_deduct_credit(
+            user_id=user_id,
+            search_type="name",
+            query=query,
+            cost=1
+        )
 
-        # TODO: Validate user has sufficient credits before performing search
-        # This will be implemented in the next phase (server-side credit validation)
+        search_id = credit_result["search_id"]
+        remaining_credits = credit_result["credits"]
 
+        # STEP 2: Perform the actual search
         offender_service = get_offender_service()
         results = await offender_service.search_by_name(
             first_name=search_request.firstName,
@@ -83,8 +99,32 @@ async def search_by_name(
             # Filter by state (case-insensitive)
             results = [r for r in results if r.get('state', '').upper() == search_request.state.upper()]
 
+        # STEP 3: Update search history with results count
+        await credit_service.update_search_results(
+            search_id=search_id,
+            results_count=len(results),
+            search_type="name"
+        )
+
         return results
+
+    except InsufficientCreditsError:
+        # Re-raise credit errors as-is (already formatted)
+        raise
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+
     except Exception as e:
+        # For unexpected errors, refund the credit if it was deducted
+        if 'search_id' in locals() and search_id:
+            await credit_service.refund_credit(
+                user_id=user_id,
+                search_id=search_id,
+                reason="api_error_500"
+            )
+
         raise HTTPException(
             status_code=500,
             detail=f"Error searching offender database: {str(e)}"

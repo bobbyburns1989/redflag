@@ -87,21 +87,40 @@
 
 ---
 
-## ⏳ Pending (3/12)
+## ✅ Completed Tasks (13/16)
 
-### Phase 3: Server-Side Credit Validation
+### Phase 3: Server-Side Credit Validation (COMPLETE)
 
-10. **Add Server-Side Credit Validation**
-    - **Files**:
-      - `backend/services/credit_service.py` (create new)
-      - `backend/routers/search.py` (add validation)
-      - `backend/routers/image_search.py` (add validation)
-      - `backend/routers/phone_lookup.py` (add validation)
-    - **Features**:
-      - Check user credits before API call
-      - Deduct credits server-side
-      - Refund credits on API failures
-      - Prevent client-side credit manipulation
+10. **✅ Created Supabase Client Service** (`backend/services/supabase_client.py`)
+    - Singleton Supabase client for backend operations
+    - Service role key support (bypasses RLS for admin ops)
+    - Anon key support (respects RLS for user ops)
+
+11. **✅ Created Credit Validation Service** (`backend/services/credit_service.py`)
+    - Check and deduct credits before API calls
+    - Atomic transactions via Supabase RPC functions
+    - Automatic credit refunds on failures
+    - Update search history with results count
+    - Custom exception for insufficient credits (HTTP 402)
+
+12. **✅ Added Credit Validation to Name Search** (`backend/routers/search.py`)
+    - Validate & deduct credit before Offenders.io API call
+    - Update search history with results count
+    - Refund credit on API errors
+
+13. **✅ Added Credit Validation to Image Search** (`backend/routers/image_search.py`)
+    - Validate & deduct credit before TinEye API call
+    - Update search history with results count
+    - Refund credit on API errors
+
+14. **✅ Added Credit Validation to Phone Lookup** (`backend/routers/phone_lookup.py`)
+    - Validate & deduct credit before Sent.dm API call
+    - Update search history with results count
+    - Refund credit on timeouts, 503, 500 errors
+
+---
+
+## ⏳ Pending (3/16)
 
 ### Phase 4: Account Deletion for Apple Users
 
@@ -125,13 +144,13 @@
 
 ## 📊 Progress Summary
 
-**Total Tasks**: 12
-**Completed**: 9 (75%) ✅
+**Total Tasks**: 16 (expanded from 12)
+**Completed**: 13 (81%) ✅
 **In Progress**: 0 (0%)
-**Pending**: 3 (25%)
+**Pending**: 3 (19%)
 
-**Time Investment**: ~7 hours so far
-**Estimated Remaining**: ~5 hours
+**Time Investment**: ~10 hours so far
+**Estimated Remaining**: ~2 hours (excluding account deletion - optional)
 
 ---
 
@@ -149,7 +168,8 @@
 - ✅ JWT authentication required on all endpoints
 - ✅ Rate limiting prevents abuse (10-15 requests/min)
 - ✅ Sent.dm API key secured on backend
-- ⏳ Credit validation server-side (pending)
+- ✅ Credit validation server-side (COMPLETE)
+- ✅ Automatic credit refunds on API failures (COMPLETE)
 
 ---
 
@@ -166,10 +186,18 @@
 
 ## 🚨 Critical Actions Required Before Deployment
 
-### 1. Get Supabase JWT Secret
-**Where**: Supabase Dashboard > Settings > API > JWT Settings
-**File**: `backend/.env`
-**Line**: `SUPABASE_JWT_SECRET=your_jwt_secret_here_get_from_supabase_dashboard`
+### 1. Get Supabase Secrets (REQUIRED)
+
+**JWT Secret**:
+- **Where**: Supabase Dashboard > Settings > API > JWT Settings
+- **File**: `backend/.env`, line 14
+- **Value**: `SUPABASE_JWT_SECRET=<your_secret>`
+
+**Service Role Key** (NEW):
+- **Where**: Supabase Dashboard > Settings > API > service_role key (secret)
+- **File**: `backend/.env`, line 17
+- **Value**: `SUPABASE_SERVICE_ROLE_KEY=<your_service_role_key>`
+- **Important**: This key bypasses RLS - never expose to clients!
 
 ### 2. Update Flutter API Calls
 All search endpoints now require `Authorization` header:
@@ -206,16 +234,20 @@ flyctl secrets set SENTDM_API_KEY=20d69ba0-03ef-410e-bce7-6ac91c5b9eb9
 ---
 
 **Created**: November 30, 2025
-**Last Updated**: November 30, 2025, 11:15 AM
-**Next Review**: After server-side credit validation implementation
+**Last Updated**: November 30, 2025, 1:45 PM
+**Next Review**: After testing and deployment
 
 ---
 
-## 🎉 Phase 1 & 2 Complete!
+## 🎉 Phase 1, 2 & 3 Complete!
 
-**Major Achievement**: Backend is now secured with authentication, rate limiting, and the Sent.dm API key is no longer exposed in the client app.
+**Major Achievement**: Backend is now fully secured with:
+- ✅ Authentication & rate limiting
+- ✅ API keys secured server-side
+- ✅ **Server-side credit validation** (prevents client manipulation)
+- ✅ **Automatic credit refunds** on API failures
 
-**What's Next**: Server-side credit validation, account deletion fix, then deployment.
+**What's Next**: Testing, then deployment to production!
 
 ---
 

@@ -16,12 +16,16 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from services.tineye_service import TinEyeService
+from services.credit_service import get_credit_service, InsufficientCreditsError
 from middleware.auth import require_auth, get_current_user
 
 router = APIRouter()
 
 # Initialize rate limiter for this router
 limiter = Limiter(key_func=get_remote_address)
+
+# Initialize credit service
+credit_service = get_credit_service()
 
 
 def get_tineye_service():
@@ -76,7 +80,6 @@ async def search_image(
     # Get authenticated user ID
     user_id = get_current_user(request)
 
-    # TODO: Validate user has sufficient credits before performing search
     # Validate input - need either image file or URL
     if not image and not image_url:
         raise HTTPException(
@@ -90,7 +93,22 @@ async def search_image(
             detail="Provide either 'image' file or 'image_url', not both"
         )
 
+    # Create query string for logging
+    query = image_url if image_url else f"image_upload_{image.filename if image else 'unknown'}"
+
     try:
+        # STEP 1: Validate and deduct credit BEFORE performing search
+        credit_result = await credit_service.check_and_deduct_credit(
+            user_id=user_id,
+            search_type="image",
+            query=query,
+            cost=1
+        )
+
+        search_id = credit_result["search_id"]
+        remaining_credits = credit_result["credits"]
+
+        # STEP 2: Perform the actual image search
         tineye_service = get_tineye_service()
 
         if image:
@@ -125,6 +143,13 @@ async def search_image(
         else:
             message = f"{result['total_matches']} matches found. This image appears on multiple websites."
 
+        # STEP 3: Update search history with results count
+        await credit_service.update_search_results(
+            search_id=search_id,
+            results_count=result["total_matches"],
+            search_type="image"
+        )
+
         return ImageSearchResponse(
             total_matches=result["total_matches"],
             total_backlinks=result["total_backlinks"],
@@ -132,9 +157,23 @@ async def search_image(
             message=message
         )
 
-    except HTTPException:
+    except InsufficientCreditsError:
+        # Re-raise credit errors as-is (already formatted)
         raise
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (validation errors, etc.)
+        raise
+
     except Exception as e:
+        # For unexpected errors, refund the credit if it was deducted
+        if 'search_id' in locals() and search_id:
+            await credit_service.refund_credit(
+                user_id=user_id,
+                search_id=search_id,
+                reason="api_error_500"
+            )
+
         print(f"Image search error: {e}")
         raise HTTPException(
             status_code=500,
