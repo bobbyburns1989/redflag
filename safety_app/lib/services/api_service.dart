@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/search_result.dart';
 
 class ApiService {
+  final _supabase = Supabase.instance.client;
+
   // Production backend URL (deployed on Fly.io)
   // For local development, change to 'http://localhost:8000/api'
   static const String _baseUrl = 'https://pink-flag-api.fly.dev/api';
@@ -18,6 +21,12 @@ class ApiService {
     String? state,
   }) async {
     try {
+      // Get JWT token from Supabase session
+      final session = _supabase.auth.currentSession;
+      if (session == null) {
+        throw ApiException('Not authenticated. Please sign in again.');
+      }
+
       final uri = Uri.parse('$_baseUrl/search/name');
 
       final requestBody = {
@@ -33,7 +42,10 @@ class ApiService {
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${session.accessToken}',
+            },
             body: jsonEncode(requestBody),
           )
           .timeout(

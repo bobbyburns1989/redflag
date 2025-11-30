@@ -103,18 +103,18 @@ serve(async (req) => {
 
     console.log(`Deleted credit transactions for user: ${userId}`);
 
-    // STEP 3: Delete user from users table
-    const { error: usersError } = await supabaseAdmin
-      .from("users")
+    // STEP 3: Delete user from profiles table
+    const { error: profilesError } = await supabaseAdmin
+      .from("profiles")
       .delete()
       .eq("id", userId);
 
-    if (usersError) {
-      console.error("Error deleting user record:", usersError);
+    if (profilesError) {
+      console.error("Error deleting user profile:", profilesError);
       return new Response(
         JSON.stringify({
-          error: "Failed to delete user record",
-          details: usersError.message,
+          error: "Failed to delete user profile",
+          details: profilesError.message,
         }),
         {
           status: 500,
@@ -123,7 +123,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Deleted user record for user: ${userId}`);
+    console.log(`Deleted user profile for user: ${userId}`);
 
     // STEP 4: Delete user from auth.users (authentication)
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(

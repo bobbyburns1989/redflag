@@ -164,10 +164,19 @@ class ImageSearchService {
   /// Upload image file and perform search
   Future<ImageSearchResult> _uploadAndSearch(File imageFile) async {
     try {
+      // Get JWT token from Supabase session
+      final session = _supabase.auth.currentSession;
+      if (session == null) {
+        throw ApiException('Not authenticated. Please sign in again.');
+      }
+
       final uri = Uri.parse('$_baseUrl/image-search');
 
       // Create multipart request
       var request = http.MultipartRequest('POST', uri);
+
+      // Add authentication header
+      request.headers['Authorization'] = 'Bearer ${session.accessToken}';
 
       // Determine content type from file extension
       final extension = imageFile.path.split('.').last.toLowerCase();
@@ -239,13 +248,22 @@ class ImageSearchService {
   /// Search by URL request
   Future<ImageSearchResult> _searchByUrlRequest(String imageUrl) async {
     try {
+      // Get JWT token from Supabase session
+      final session = _supabase.auth.currentSession;
+      if (session == null) {
+        throw ApiException('Not authenticated. Please sign in again.');
+      }
+
       final uri = Uri.parse('$_baseUrl/image-search');
 
       // Send as form data with URL
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': 'Bearer ${session.accessToken}',
+            },
             body: {'image_url': imageUrl},
           )
           .timeout(
