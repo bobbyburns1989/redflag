@@ -1,98 +1,148 @@
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service for handling account deletion
 ///
 /// This service manages the complete deletion of a user's account
 /// including all associated data across multiple tables.
-/// Required for GDPR compliance.
+/// Required for GDPR compliance and Apple App Store requirements.
 class AccountDeletionService {
-  /// Delete user account and all associated data
+  /// Delete user account using Edge Function (server-side)
   ///
-  /// Deletion order is important due to foreign key constraints:
-  /// 1. searches (references profiles.id)
-  /// 2. credit_transactions (references profiles.id)
-  /// 3. profiles (references auth.users.id)
-  /// 4. auth user (handled by Supabase)
+  /// Supports both email/password and Apple Sign-In users.
+  /// For Apple users, re-authentication with Apple is required.
+  /// For email users, password verification is required.
   ///
-  /// Returns true if deletion was successful, false otherwise
+  /// The server-side Edge Function handles:
+  /// 1. JWT token validation
+  /// 2. Deletion of searches
+  /// 3. Deletion of credit_transactions
+  /// 4. Deletion of user record
+  /// 5. Deletion of auth.users record (with admin privileges)
   Future<DeletionResult> deleteAccount({
-    required String userId,
-    required String password,
+    String? password,
+    AuthorizationCredentialAppleID? appleCredential,
   }) async {
     try {
-      // Step 1: Verify password before deletion
-      if (kDebugMode) {
-        print('🔒 [DELETE] Verifying password for user: $userId');
-      }
-
-      // Get user email first
       final user = supabase.auth.currentUser;
-      if (user == null || user.email == null) {
+      if (user == null) {
         return DeletionResult.failed('User not found');
       }
 
-      // Verify password by attempting to sign in
-      try {
-        await supabase.auth.signInWithPassword(
-          email: user.email!,
-          password: password,
-        );
-        if (kDebugMode) {
-          print('✅ [DELETE] Password verified');
+      if (kDebugMode) {
+        print('🔒 [DELETE] Starting account deletion for user: ${user.id}');
+      }
+
+      // Determine authentication method
+      final isAppleUser = user.appMetadata['provider'] == 'apple';
+
+      // Step 1: Re-authenticate user before deletion
+      if (isAppleUser) {
+        // Apple Sign-In re-authentication
+        if (appleCredential == null) {
+          return DeletionResult.failed(
+            'Apple re-authentication required',
+            needsAppleAuth: true,
+          );
         }
-      } catch (e) {
+
         if (kDebugMode) {
-          print('❌ [DELETE] Password verification failed: $e');
+          print('🍎 [DELETE] Re-authenticating with Apple');
         }
-        return DeletionResult.failed('Incorrect password');
+
+        try {
+          // Re-authenticate with Apple
+          await supabase.auth.signInWithIdToken(
+            provider: OAuthProvider.apple,
+            idToken: appleCredential.identityToken!,
+            accessToken: appleCredential.authorizationCode,
+          );
+
+          if (kDebugMode) {
+            print('✅ [DELETE] Apple re-authentication successful');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ [DELETE] Apple re-authentication failed: $e');
+          }
+          return DeletionResult.failed('Apple authentication failed');
+        }
+      } else {
+        // Email/password re-authentication
+        if (password == null || password.isEmpty) {
+          return DeletionResult.failed('Password required');
+        }
+
+        if (kDebugMode) {
+          print('🔒 [DELETE] Verifying password');
+        }
+
+        if (user.email == null) {
+          return DeletionResult.failed('Email not found');
+        }
+
+        try {
+          await supabase.auth.signInWithPassword(
+            email: user.email!,
+            password: password,
+          );
+
+          if (kDebugMode) {
+            print('✅ [DELETE] Password verified');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ [DELETE] Password verification failed: $e');
+          }
+          return DeletionResult.failed('Incorrect password');
+        }
       }
 
-      // Step 2: Delete searches table
+      // Step 2: Call server-side Edge Function to delete account
       if (kDebugMode) {
-        print('🗑️ [DELETE] Deleting searches for user: $userId');
-      }
-      await supabase.from('searches').delete().eq('user_id', userId);
-      if (kDebugMode) {
-        print('✅ [DELETE] Searches deleted');
+        print('🗑️ [DELETE] Calling delete-account Edge Function');
       }
 
-      // Step 3: Delete credit_transactions table
-      if (kDebugMode) {
-        print('🗑️ [DELETE] Deleting credit transactions for user: $userId');
-      }
-      await supabase
-          .from('credit_transactions')
-          .delete()
-          .eq('user_id', userId);
-      if (kDebugMode) {
-        print('✅ [DELETE] Credit transactions deleted');
+      final session = supabase.auth.currentSession;
+      if (session == null) {
+        return DeletionResult.failed('No active session');
       }
 
-      // Step 4: Delete profiles table
-      if (kDebugMode) {
-        print('🗑️ [DELETE] Deleting profile for user: $userId');
-      }
-      await supabase.from('profiles').delete().eq('id', userId);
-      if (kDebugMode) {
-        print('✅ [DELETE] Profile deleted');
-      }
-
-      // Step 5: Delete auth user
-      // Note: This requires admin privileges or a server-side function
-      // For now, we'll rely on Supabase's cascade delete or manual cleanup
-      if (kDebugMode) {
-        print('🗑️ [DELETE] Deleting auth user: $userId');
-      }
-
-      // The user will be signed out and can no longer access the account
-      // The auth.users record may need manual cleanup via Supabase dashboard
-      // or a server-side function with admin privileges
+      final response = await supabase.functions.invoke(
+        'delete-account',
+        headers: {
+          'Authorization': 'Bearer ${session.accessToken}',
+        },
+      );
 
       if (kDebugMode) {
-        print('✅ [DELETE] Account deletion complete');
+        print('📥 [DELETE] Edge Function response: ${response.data}');
       }
-      return DeletionResult.success();
+
+      // Check response
+      if (response.status == 200) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true) {
+          if (kDebugMode) {
+            print('✅ [DELETE] Account deletion complete');
+          }
+          return DeletionResult.success();
+        } else {
+          final error = data['error'] ?? 'Unknown error';
+          if (kDebugMode) {
+            print('❌ [DELETE] Edge Function returned error: $error');
+          }
+          return DeletionResult.failed(error);
+        }
+      } else {
+        final error = response.data?['error'] ?? 'Server error';
+        if (kDebugMode) {
+          print('❌ [DELETE] Edge Function failed with status ${response.status}: $error');
+        }
+        return DeletionResult.failed(error);
+      }
     } catch (e) {
       if (kDebugMode) {
         print('❌ [DELETE] Error deleting account: $e');
@@ -121,10 +171,13 @@ class AccountDeletionService {
 class DeletionResult {
   final bool success;
   final String? error;
+  final bool needsAppleAuth;
 
   DeletionResult.success()
       : success = true,
-        error = null;
+        error = null,
+        needsAppleAuth = false;
 
-  DeletionResult.failed(this.error) : success = false;
+  DeletionResult.failed(this.error, {this.needsAppleAuth = false})
+      : success = false;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../main.dart';
 import '../../services/account_deletion_service.dart';
 import '../../widgets/custom_button.dart';
@@ -10,7 +11,8 @@ import '../../widgets/custom_text_field.dart';
 /// Delete Account Screen
 ///
 /// Multi-step confirmation flow for permanently deleting a user's account.
-/// Required for GDPR compliance.
+/// Required for GDPR compliance and Apple App Store requirements.
+/// Supports both email/password and Apple Sign-In users.
 class DeleteAccountScreen extends StatefulWidget {
   const DeleteAccountScreen({super.key});
 
@@ -25,6 +27,13 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
   bool _isDeleting = false;
   bool _obscurePassword = true;
+  bool _isAppleUser = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthProvider();
+  }
 
   @override
   void dispose() {
@@ -33,9 +42,28 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     super.dispose();
   }
 
+  /// Check if user signed in with Apple
+  void _checkAuthProvider() {
+    final user = supabase.auth.currentUser;
+    if (user != null) {
+      final provider = user.appMetadata['provider'];
+      setState(() {
+        _isAppleUser = provider == 'apple';
+      });
+    }
+  }
+
   bool get _canDelete {
-    return _deleteConfirmController.text.trim().toUpperCase() == 'DELETE' &&
-        _passwordController.text.isNotEmpty;
+    final hasTypedDelete =
+        _deleteConfirmController.text.trim().toUpperCase() == 'DELETE';
+
+    if (_isAppleUser) {
+      // For Apple users, only need to type DELETE (auth happens via Apple Sign-In)
+      return hasTypedDelete;
+    } else {
+      // For email users, need both DELETE and password
+      return hasTypedDelete && _passwordController.text.isNotEmpty;
+    }
   }
 
   Future<void> _deleteAccount() async {
@@ -84,14 +112,49 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       if (user == null) {
         if (mounted) {
           CustomSnackbar.showError(context, 'User not found');
+          setState(() => _isDeleting = false);
         }
         return;
       }
 
+      // Handle Apple Sign-In users
+      AuthorizationCredentialAppleID? appleCredential;
+      if (_isAppleUser) {
+        if (kDebugMode) {
+          print('🍎 [DELETE_SCREEN] Re-authenticating with Apple');
+        }
+
+        try {
+          // Prompt user to sign in with Apple again
+          appleCredential = await SignInWithApple.getAppleIDCredential(
+            scopes: [
+              AppleIDAuthorizationScopes.email,
+              AppleIDAuthorizationScopes.fullName,
+            ],
+          );
+
+          if (kDebugMode) {
+            print('✅ [DELETE_SCREEN] Apple credential obtained');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ [DELETE_SCREEN] Apple Sign-In cancelled or failed: $e');
+          }
+          if (mounted) {
+            setState(() => _isDeleting = false);
+            CustomSnackbar.showError(
+              context,
+              'Apple authentication required to delete account',
+            );
+          }
+          return;
+        }
+      }
+
       // Delete account
       final result = await _accountDeletionService.deleteAccount(
-        userId: user.id,
-        password: _passwordController.text,
+        password: _isAppleUser ? null : _passwordController.text,
+        appleCredential: appleCredential,
       );
 
       if (result.success) {
@@ -273,31 +336,68 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       textCapitalization: TextCapitalization.characters,
                     ),
 
-                    const SizedBox(height: 20),
+                    // Show password field only for non-Apple users
+                    if (!_isAppleUser) ...[
+                      const SizedBox(height: 20),
 
-                    // Enter password
-                    const Text(
-                      '2. Enter your password:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      // Enter password
+                      const Text(
+                        '2. Enter your password:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    CustomTextField(
-                      controller: _passwordController,
-                      hint: 'Enter your password',
-                      obscureText: _obscurePassword,
-                      onChanged: (value) => setState(() {}),
-                      suffixIcon: _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      onSuffixTap: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
+                      const SizedBox(height: 8),
+                      CustomTextField(
+                        controller: _passwordController,
+                        hint: 'Enter your password',
+                        obscureText: _obscurePassword,
+                        onChanged: (value) => setState(() {}),
+                        suffixIcon: _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        onSuffixTap: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ],
+
+                    // Show Apple Sign-In notice for Apple users
+                    if (_isAppleUser) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.apple,
+                              color: Colors.black,
+                              size: 24,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'You\'ll be asked to authenticate with Apple when you click Delete',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
