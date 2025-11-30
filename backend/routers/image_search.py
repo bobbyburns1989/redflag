@@ -9,12 +9,19 @@ Endpoints:
 - GET /api/image-search/remaining: Check remaining API searches
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, Depends
 from pydantic import BaseModel
 from typing import Optional, List
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 from services.tineye_service import TinEyeService
+from middleware.auth import require_auth, get_current_user
 
 router = APIRouter()
+
+# Initialize rate limiter for this router
+limiter = Limiter(key_func=get_remote_address)
 
 
 def get_tineye_service():
@@ -38,13 +45,19 @@ class ImageSearchResponse(BaseModel):
     message: str
 
 
-@router.post("/image-search", response_model=ImageSearchResponse)
+@router.post("/image-search", response_model=ImageSearchResponse, dependencies=[Depends(require_auth)])
+@limiter.limit("10/minute")  # Max 10 image searches per minute per IP
 async def search_image(
+    request: Request,
     image: Optional[UploadFile] = File(None),
     image_url: Optional[str] = Form(None)
 ):
     """
     Perform reverse image search to find where an image appears online.
+
+    **Authentication Required**: Must provide valid Supabase JWT token.
+
+    **Rate Limit**: 10 requests per minute per IP address.
 
     Accepts either:
     - image: Uploaded image file (multipart/form-data)
@@ -57,7 +70,13 @@ async def search_image(
     - Detect catfishing/fake profiles
     - Find higher resolution versions
     - Check if image is a stock photo
+
+    **Note**: This endpoint requires the user to have sufficient credits.
     """
+    # Get authenticated user ID
+    user_id = get_current_user(request)
+
+    # TODO: Validate user has sufficient credits before performing search
     # Validate input - need either image file or URL
     if not image and not image_url:
         raise HTTPException(

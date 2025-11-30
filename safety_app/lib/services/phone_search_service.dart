@@ -194,28 +194,36 @@ class PhoneSearchService {
     }
   }
 
-  /// Call Sent.dm API for phone lookup
+  /// Call backend API for phone lookup
   ///
-  /// Private method that makes the actual API call.
+  /// Private method that makes the actual API call to our secure backend.
+  /// The backend handles Sent.dm API integration server-side.
   Future<PhoneSearchResult> _lookupPhone(String e164Phone) async {
     if (kDebugMode) {
-      print('📞 [PHONE] Calling Sent.dm API...');
+      print('📞 [PHONE] Calling backend phone lookup API...');
     }
 
     try {
-      // Build API URL with query parameter
-      final uri = Uri.parse(
-        '${AppConfig.SENTDM_API_URL}?phone=${Uri.encodeComponent(e164Phone)}',
-      );
+      // Get auth token for backend authentication
+      final session = _supabase.auth.currentSession;
+      if (session == null) {
+        throw PhoneSearchException('Authentication required');
+      }
 
-      // Make GET request with Bearer token
+      // Build API URL
+      final uri = Uri.parse('${AppConfig.API_BASE_URL}/phone/lookup');
+
+      // Make POST request to backend with auth token
       final response = await http
-          .get(
+          .post(
             uri,
             headers: {
-              'Authorization': 'Bearer ${AppConfig.SENTDM_API_KEY}',
+              'Authorization': 'Bearer ${session.accessToken}',
               'Content-Type': 'application/json',
             },
+            body: jsonEncode({
+              'phone_number': e164Phone,
+            }),
           )
           .timeout(
             const Duration(seconds: 30),
@@ -232,7 +240,12 @@ class PhoneSearchService {
       // Handle response
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        return PhoneSearchResult.fromSentdmResponse(jsonData, e164Phone);
+        // Backend passes through Sent.dm response data in metadata field
+        // Use the same parser since backend preserves the original structure
+        return PhoneSearchResult.fromSentdmResponse(
+          jsonData['metadata'] ?? jsonData,
+          e164Phone,
+        );
       } else if (response.statusCode == 503) {
         // Service maintenance - specific message
         throw PhoneSearchException(
@@ -410,11 +423,6 @@ class PhoneSearchService {
     }
   }
 
-  /// Check if Sent.dm API key is configured
-  bool get isApiKeyConfigured {
-    return AppConfig.SENTDM_API_KEY != 'YOUR_SENTDM_API_KEY_HERE' &&
-        AppConfig.SENTDM_API_KEY.isNotEmpty;
-  }
 }
 
 /// Exception thrown when phone search fails

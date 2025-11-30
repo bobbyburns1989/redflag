@@ -103,17 +103,12 @@ class AppConfig {
   /// Credits per search
   static const int CREDITS_PER_SEARCH = 1;
 
-  // ==================== PHONE LOOKUP API (Sent.dm) ====================
+  // ==================== PHONE LOOKUP ====================
+  // NOTE: Phone lookup is now handled server-side for security.
+  // The Sent.dm API key is secured on the backend and never exposed to clients.
+  // Phone lookups are made through: POST /api/phone/lookup
 
-  /// Sent.dm Phone Lookup API key
-  /// Sign up at: https://www.sent.dm
-  /// Get API key from: https://www.sent.dm/dashboard
-  static const String SENTDM_API_KEY = '20d69ba0-03ef-410e-bce7-6ac91c5b9eb9';
-
-  /// Sent.dm API base URL
-  static const String SENTDM_API_URL = 'https://www.sent.dm/api/phone-lookup';
-
-  /// Phone lookup rate limit (15 requests per minute)
+  /// Phone lookup rate limit (15 requests per minute - enforced on backend)
   static const int PHONE_LOOKUP_RATE_LIMIT = 15;
 
   // ==================== HELPER METHODS ====================
