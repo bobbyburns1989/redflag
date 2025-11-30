@@ -105,54 +105,71 @@ pip install -r requirements.txt
 
 ---
 
-## 🔑 **Environment Variables Required**
+## 🔑 **Environment Variables** ✅
 
-### **New Required Variable**:
+**Status**: **CONFIGURED** - All secrets added to `backend/.env`
 
-**File**: `backend/.env`
-
-```bash
-# Line 17 - Service Role Key (Admin access, bypasses RLS)
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-```
-
-**Where to Find**:
-1. Go to https://app.supabase.com
-2. Open your project
-3. Settings → API
-4. Copy **service_role key** (under "Project API keys")
-
-⚠️ **IMPORTANT**: Never expose this key to clients! Backend only!
-
----
-
-### **Also Required** (if not already set):
+### **Already Configured**:
 
 ```bash
 # Line 14 - JWT Secret (for token validation)
-SUPABASE_JWT_SECRET=your_jwt_secret_here
+SUPABASE_JWT_SECRET=e0We7dHAQYVq4/XB+xOh4iZGsmPr6dpbvMYug/wSQtAIDKW6cTel3HK1HBQpyIrp8rWxfg4RtxmUt86SG9Otow==
+
+# Line 17 - Service Role Key (Admin access, bypasses RLS)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqYnRtcmJiaml2bml2ZXB0ZGpsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjQzOTg0MywiZXhwIjoyMDc4MDE1ODQzfQ.aJAe8N-oT-xmh1Dh_rfjUpKGjlCqk44b7zoWQUj4MII
 ```
 
-**Where to Find**:
-1. Supabase Dashboard → Settings → API
-2. Scroll to **JWT Settings**
-3. Copy **JWT Secret**
+✅ Both secrets are already configured in your backend `.env` file!
+
+⚠️ **IMPORTANT**: Never expose these keys to clients! Backend only!
+
+---
+
+## 🚨 **CRITICAL: Run SQL Schema in Supabase** (REQUIRED)
+
+### **⚠️ YOU MUST DO THIS BEFORE TESTING/DEPLOYMENT**
+
+The backend code requires **2 Supabase RPC functions** that don't exist yet:
+- `deduct_credit_for_search()` - Validates and deducts credits atomically
+- `update_search_results()` - Updates search history
+
+### **How to Create These Functions**:
+
+1. **Open Supabase Dashboard**:
+   - Go to https://app.supabase.com
+   - Select your Pink Flag project
+
+2. **Open SQL Editor**:
+   - Click **SQL Editor** in left sidebar
+   - Click **New Query**
+
+3. **Run the Schema**:
+   - Open file: `schemas/CREDIT_DEDUCTION_SCHEMA.sql`
+   - Copy entire contents
+   - Paste into Supabase SQL Editor
+   - Click **Run** (or press Cmd+Enter)
+   - Wait for "Success. No rows returned"
+
+4. **Verify**:
+   ```sql
+   SELECT proname FROM pg_proc WHERE proname = 'deduct_credit_for_search';
+   SELECT proname FROM pg_proc WHERE proname = 'update_search_results';
+   ```
+   Both queries should return 1 row.
+
+📖 **See `SUPABASE_CONFIGURATION_REQUIRED.md` for detailed instructions**
 
 ---
 
 ## 🚀 **Before You Can Deploy**
 
-### **Step 1: Get Supabase Keys** (REQUIRED)
+### **Step 1: Run Supabase SQL Schema** ⚠️ CRITICAL
 
-1. **Service Role Key** (NEW):
-   - Supabase Dashboard → Settings → API
-   - Copy **service_role** key
-   - Add to `backend/.env` line 17
+**File**: `schemas/CREDIT_DEDUCTION_SCHEMA.sql`
 
-2. **JWT Secret** (if not done):
-   - Supabase Dashboard → Settings → API → JWT Settings
-   - Copy **JWT Secret**
-   - Add to `backend/.env` line 14
+Run this in Supabase SQL Editor (see section above for instructions)
+
+Without this, you'll get error: `function deduct_credit_for_search does not exist`
 
 ### **Step 2: Install Dependencies**
 
