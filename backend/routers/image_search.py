@@ -98,11 +98,12 @@ async def search_image(
 
     try:
         # STEP 1: Validate and deduct credit BEFORE performing search
+        # Image searches cost 4 credits due to TinEye API pricing ($0.04/search)
         credit_result = await credit_service.check_and_deduct_credit(
             user_id=user_id,
             search_type="image",
             query=query,
-            cost=1
+            cost=4
         )
 
         search_id = credit_result["search_id"]
@@ -171,7 +172,8 @@ async def search_image(
             await credit_service.refund_credit(
                 user_id=user_id,
                 search_id=search_id,
-                reason="api_error_500"
+                reason="api_error_500",
+                amount=4
             )
 
         print(f"Image search error: {e}")

@@ -1,9 +1,8 @@
 """
 Phone Lookup Router
 
-Handles phone number reverse lookup requests using Sent.dm API.
-This endpoint securely stores the Sent.dm API key on the server side
-to prevent client-side exposure.
+Handles phone number reverse lookup requests using Twilio Lookup API v2.
+Twilio credentials are stored on the server side to prevent client-side exposure.
 
 Endpoints:
 - POST /api/phone/lookup: Lookup phone number information
@@ -23,15 +22,16 @@ from services.credit_service import get_credit_service, InsufficientCreditsError
 
 router = APIRouter()
 
-# Initialize rate limiter
+# Initialize rate limiter (protects Twilio cost exposure)
 limiter = Limiter(key_func=get_remote_address)
 
 # Initialize credit service
 credit_service = get_credit_service()
 
-# Get Sent.dm API key from environment
-SENTDM_API_KEY = os.getenv("SENTDM_API_KEY")
-SENTDM_API_URL = "https://www.sent.dm/api/phone-lookup"
+# Get Twilio credentials from environment
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_LOOKUP_URL = "https://lookups.twilio.com/v2/PhoneNumbers"
 
 
 class PhoneLookupRequest(BaseModel):
@@ -64,39 +64,40 @@ class PhoneLookupResult(BaseModel):
 
 
 @router.post("/phone/lookup", response_model=PhoneLookupResult, dependencies=[Depends(require_auth)])
-@limiter.limit("15/minute")  # Match Sent.dm API rate limit (15 requests/minute)
+@limiter.limit("15/minute")  # App-level guardrail to control Twilio spend
 async def lookup_phone(
     request: Request,
     lookup_request: PhoneLookupRequest
 ):
     """
-    Perform reverse lookup on a phone number using Sent.dm API.
+    Perform reverse lookup on a phone number using Twilio Lookup API v2.
 
     **Authentication Required**: Must provide valid Supabase JWT token.
 
-    **Rate Limit**: 15 requests per minute per IP address (matches Sent.dm API limit).
+    **Rate Limit**: 15 requests per minute per IP address.
 
     Returns caller information including:
     - Caller Name (CNAM)
     - Carrier information
     - Line type (Mobile, Landline, VoIP)
-    - Location (City/State)
-    - Fraud risk assessment
+    - Country code
 
     **Note**: This endpoint requires the user to have sufficient credits.
     Credits are validated and deducted server-side before the lookup is performed.
+
+    **Cost**: $0.018 per lookup ($0.008 for Line Type Intelligence + $0.01 for Caller Name)
 
     **Use Cases**:
     - Verify unknown caller identity
     - Check for potential scam/spam numbers
     - Validate contact information
-    - Assess fraud risk before responding
+    - Identify line type (mobile vs landline)
 
-    **Security**: The Sent.dm API key is securely stored on the server
+    **Security**: Twilio credentials are securely stored on the server
     and never exposed to the client.
     """
-    # Check if API key is configured
-    if not SENTDM_API_KEY:
+    # Check if Twilio credentials are configured
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
         raise HTTPException(
             status_code=500,
             detail="Phone lookup service not configured. Please contact support."
@@ -107,24 +108,30 @@ async def lookup_phone(
 
     try:
         # STEP 1: Validate and deduct credit BEFORE performing lookup
+        # Phone searches cost 2 credits due to Twilio API pricing ($0.018/lookup)
         credit_result = await credit_service.check_and_deduct_credit(
             user_id=user_id,
             search_type="phone",
             query=lookup_request.phone_number,
-            cost=1
+            cost=2
         )
 
         search_id = credit_result["search_id"]
         remaining_credits = credit_result["credits"]
 
-        # STEP 2: Call Sent.dm API
+        # STEP 2: Call Twilio Lookup API v2
         async with httpx.AsyncClient(timeout=15.0) as client:
+            # Format phone number for URL (E.164 format with + prefix)
+            phone_number = lookup_request.phone_number
+            if not phone_number.startswith('+'):
+                phone_number = f'+{phone_number}'
+
             response = await client.get(
-                SENTDM_API_URL,
+                f"{TWILIO_LOOKUP_URL}/{phone_number}",
                 params={
-                    "number": lookup_request.phone_number,
-                    "api_key": SENTDM_API_KEY
+                    "Fields": "line_type_intelligence,caller_name"
                 },
+                auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
                 headers={
                     "Accept": "application/json"
                 }
@@ -137,7 +144,8 @@ async def lookup_phone(
                 await credit_service.refund_credit(
                     user_id=user_id,
                     search_id=search_id,
-                    reason="api_maintenance_503"
+                    reason="api_maintenance_503",
+                    amount=2
                 )
                 raise HTTPException(
                     status_code=503,
@@ -149,7 +157,8 @@ async def lookup_phone(
                 await credit_service.refund_credit(
                     user_id=user_id,
                     search_id=search_id,
-                    reason="server_error_500"
+                    reason="server_error_500",
+                    amount=2
                 )
                 raise HTTPException(
                     status_code=500,
@@ -178,15 +187,18 @@ async def lookup_phone(
             data = response.json()
 
             # Extract and structure the response
-            # Sent.dm API response structure (adjust based on actual API documentation)
+            # Twilio Lookup API v2 response structure
+            line_type_intel = data.get("line_type_intelligence", {})
+            caller_name_data = data.get("caller_name", {})
+
             result = PhoneLookupResult(
-                phone_number=lookup_request.phone_number,
-                caller_name=data.get("caller_name") or data.get("cnam"),
-                carrier=data.get("carrier"),
-                line_type=data.get("line_type") or data.get("type"),
-                location=data.get("location"),
-                fraud_risk=data.get("fraud_risk"),
-                fraud_score=data.get("fraud_score"),
+                phone_number=data.get("phone_number", lookup_request.phone_number),
+                caller_name=caller_name_data.get("caller_name"),
+                carrier=line_type_intel.get("carrier_name"),
+                line_type=line_type_intel.get("type"),  # mobile, landline, voip, etc.
+                location=f"{data.get('country_code', '')}",  # Twilio provides country code
+                fraud_risk=None,  # Available with SMS Pumping Risk package ($0.025 extra)
+                fraud_score=None,  # Available with SMS Pumping Risk package
                 metadata=data  # Store full response for debugging
             )
 
@@ -204,7 +216,8 @@ async def lookup_phone(
         await credit_service.refund_credit(
             user_id=user_id,
             search_id=search_id,
-            reason="request_timeout"
+            reason="request_timeout",
+            amount=2
         )
         raise HTTPException(
             status_code=504,
@@ -216,7 +229,8 @@ async def lookup_phone(
         await credit_service.refund_credit(
             user_id=user_id,
             search_id=search_id,
-            reason="network_error"
+            reason="network_error",
+            amount=2
         )
         raise HTTPException(
             status_code=503,
@@ -237,7 +251,8 @@ async def lookup_phone(
             await credit_service.refund_credit(
                 user_id=user_id,
                 search_id=search_id,
-                reason="unknown_error"
+                reason="unknown_error",
+                amount=2
             )
 
         print(f"Phone lookup error: {e}")
@@ -254,16 +269,18 @@ async def test_phone_lookup():
 
     This endpoint does NOT require authentication.
     """
-    if not SENTDM_API_KEY:
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
         return {
             "status": "error",
-            "message": "Sent.dm API key not configured",
+            "message": "Twilio credentials not configured",
             "configured": False
         }
 
     return {
         "status": "ok",
-        "message": "Phone lookup service is properly configured",
+        "message": "Phone lookup service is properly configured with Twilio",
         "configured": True,
-        "rate_limit": "15 requests per minute"
+        "provider": "Twilio Lookup API v2",
+        "rate_limit": "15 requests per minute",
+        "features": ["Line Type Intelligence", "Caller Name (CNAM)"]
     }

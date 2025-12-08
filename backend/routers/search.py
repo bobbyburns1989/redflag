@@ -65,11 +65,12 @@ async def search_by_name(
 
     try:
         # STEP 1: Validate and deduct credit BEFORE performing search
+        # Name searches cost 10 credits due to Offenders.io API pricing ($0.20/search)
         credit_result = await credit_service.check_and_deduct_credit(
             user_id=user_id,
             search_type="name",
             query=query,
-            cost=1
+            cost=10
         )
 
         search_id = credit_result["search_id"]
@@ -122,7 +123,8 @@ async def search_by_name(
             await credit_service.refund_credit(
                 user_id=user_id,
                 search_id=search_id,
-                reason="api_error_500"
+                reason="api_error_500",
+                amount=10
             )
 
         raise HTTPException(
