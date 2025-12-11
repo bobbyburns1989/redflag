@@ -1,16 +1,23 @@
-# Safety First - Backend API
+# Pink Flag - Backend API
 
-FastAPI backend service for the Safety First mobile app. Provides a secure proxy for sex offender registry API calls.
+FastAPI backend service for the Pink Flag mobile app. Provides secure API proxy and credit management for sex offender registry searches.
 
 ## Overview
 
-This backend serves as an intermediary between the Flutter mobile app and external sex offender registry APIs. It:
+This backend serves as an intermediary between the Flutter mobile app and external APIs. It:
 
-- Secures API keys (not exposed to mobile clients)
-- Normalizes data from multiple registry APIs
-- Provides fallback mechanisms
-- Handles errors gracefully
-- Returns mock data for development when API keys not configured
+- **Credit Management**: Server-side credit validation, deduction, and refunds (single source of truth for ALL search types)
+- **API Security**: Secures API keys (not exposed to mobile clients)
+- **Data Normalization**: Normalizes data from multiple registry APIs
+- **Automatic Refunds**: Refunds credits on API failures (503, 500, timeouts)
+- **JWT Authentication**: Validates Supabase user sessions on all requests
+- **FBI Integration**: Parallel FBI Most Wanted checks (free API)
+- **Error Handling**: Graceful error handling with automatic retries
+
+**Credit System (v1.1.11+)**:
+- ✅ Name Search: Backend-only credit deduction (v1.1.10)
+- ✅ Image Search: Backend-only credit deduction (v1.1.11)
+- ✅ Phone Search: Backend-only credit deduction with Twilio Lookup API v2 (v1.1.13)
 
 ## Tech Stack
 
@@ -77,9 +84,20 @@ Tests search API connectivity.
 ```bash
 POST /api/search/name
 Content-Type: application/json
+Authorization: Bearer <supabase-jwt-token>
 ```
 
 Searches offender registries by name with optional filters.
+
+**IMPORTANT**: This endpoint handles credit deduction automatically. Do NOT deduct credits on client-side.
+**Credit deduction flow fixed in v1.1.10 - client-side deduction removed.**
+
+**Credit Flow:**
+1. Validates JWT token → extracts user_id
+2. Calls `deduct_credit_for_search` RPC (atomic transaction)
+3. Performs external API search
+4. On success: Updates search history with results
+5. On failure: Calls `refund_credit_for_failed_search` RPC
 
 **Request Body:**
 ```json
@@ -87,8 +105,16 @@ Searches offender registries by name with optional filters.
   "firstName": "John",
   "lastName": "Doe",
   "phoneNumber": "555-1234",
-  "zipCode": "94102"
+  "zipCode": "94102",
+  "age": "35",
+  "state": "CA"
 }
+```
+
+**Headers:**
+```
+Authorization: Bearer <supabase-access-token>
+Content-Type: application/json
 ```
 
 **Response:**
@@ -163,8 +189,24 @@ cp .env.example .env
 Add your API keys:
 
 ```env
+# Name Search API
 OFFENDERS_IO_API_KEY=your_offenders_io_key
-CRIMEOMETER_API_KEY=your_crimeometer_key  # Optional
+CRIMEOMETER_API_KEY=your_crimeometer_key  # Optional fallback
+
+# Phone Lookup API (Twilio Lookup v2)
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Image Search API
+TINEYE_API_KEY=your_tineye_api_key_here
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_JWT_SECRET=your_jwt_secret
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Server Config
 PORT=8000
 HOST=0.0.0.0
 ```

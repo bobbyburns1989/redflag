@@ -541,7 +541,7 @@ class PhoneResultsScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Phone lookup data is provided by Sent.dm API. Information may not always be current or complete. Use as one verification tool among many.',
+              'Phone lookup data is provided by Twilio Lookup API. Information may not always be current or complete. Use as one verification tool among many.',
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.mediumText,
                 fontSize: 12,

@@ -1,11 +1,12 @@
-# Phone Lookup Feature Implementation - Pink Flag v1.1.6
+# Phone Lookup Feature Implementation - Pink Flag v1.1.6+
 
 **Feature:** Reverse phone number lookup with caller name identification
-**API Provider:** Sent.dm (100% FREE)
+**Original API Provider:** Sent.dm (DEPRECATED - unreliable)
+**Current API Provider:** Twilio Lookup API v2 (Enterprise reliability)
 **Start Date:** 2025-11-28
-**Completion Date:** 2025-11-28
-**Target Version:** v1.1.6
-**Status:** ✅ COMPLETE
+**Migration Date:** 2025-12-03
+**Current Version:** v1.1.13
+**Status:** ✅ COMPLETE & MIGRATED TO TWILIO
 
 ---
 
@@ -18,71 +19,118 @@ Add the ability for users to search phone numbers and retrieve:
 - Fraud/spam risk score
 - Location data
 
-**Cost to User:** 1 credit per phone lookup (consistent with name search)
+**Cost to User:** 2 credits per phone lookup (aligned to Twilio cost of $0.018/call)
 
 ---
 
-## 🎯 Implementation Strategy
+## ⚠️ Migration Notice
 
-### **Option A: Free Implementation with Sent.dm API**
+**As of v1.1.13 (December 3, 2025):**
+
+The phone lookup feature has been **migrated from Sent.dm to Twilio Lookup API v2** due to reliability issues with the Sent.dm service.
+
+**See:** [TWILIO_MIGRATION_COMPLETE.md](../../TWILIO_MIGRATION_COMPLETE.md) for full migration details.
+
+---
+
+## 🎯 Current Implementation (Twilio Lookup API v2)
+
+### **Twilio Lookup API v2 Details**
 
 **API Details:**
-- **Endpoint:** `https://www.sent.dm/api/phone-lookup`
+- **Endpoint:** `https://lookups.twilio.com/v2/PhoneNumbers/{phone_number}`
 - **Method:** GET
-- **Authentication:** Bearer token (API key required)
-- **Rate Limit:** 15 requests/minute
-- **Cost:** 100% FREE
-- **Coverage:** US, Canada, UK, International
+- **Authentication:** HTTP Basic Auth (Account SID + Auth Token)
+- **Rate Limit:** High (enterprise-grade)
+- **Cost:** $0.018 per lookup ($0.008 Line Type + $0.010 Caller Name)
+- **Coverage:** Global (200+ countries)
+- **Reliability:** 99.95% uptime SLA
 
 **Request Format:**
 ```bash
-GET https://www.sent.dm/api/phone-lookup?phone=+12345678900
-Authorization: Bearer YOUR_API_KEY
+GET https://lookups.twilio.com/v2/PhoneNumbers/+12345678900
+  ?Fields=line_type_intelligence,caller_name
+Authorization: Basic {account_sid}:{auth_token}
 ```
 
 **Response Fields:**
-- Country code
+- Phone number (E.164 format)
 - National format
-- Carrier details
-- Caller name (CNAM)
-- Portability status
-- Fraud risk score
-- Line type
-- Validation status
+- Country code
+- Validity status
+- Line Type Intelligence:
+  - Type (mobile/landline/voip)
+  - Carrier name
+- Caller Name (CNAM)
+- Portability information
+
+---
+
+## 📜 Historical Implementation (Sent.dm - DEPRECATED)
+
+### **Why We Migrated**
+
+**Sent.dm Issues:**
+1. 🔴 Frequent maintenance outages (503 errors)
+2. 🟡 Unreliable uptime for production use
+3. 🟡 Limited support and documentation
+4. ⚠️ Uncertain long-term service availability
+
+**Sent.dm API Details (Historical):**
+- **Endpoint:** `https://www.sent.dm/api/phone-lookup` (DEPRECATED)
+- **Method:** GET
+- **Authentication:** Bearer token
+- **Cost:** 100% FREE
+- **Status:** ❌ Not recommended for production
 
 ---
 
 ## 🗺️ Implementation Roadmap
 
-### **Phase 1: Setup & Configuration** ✅ COMPLETED
+### **Phase 1: Setup & Configuration** ✅ COMPLETED (MIGRATED TO TWILIO)
 
-**Tasks:**
-1. ✅ Create this implementation document
-2. ⏳ Sign up for Sent.dm API (https://www.sent.dm) - **USER ACTION REQUIRED**
-3. ⏳ Get API key from dashboard - **USER ACTION REQUIRED**
-4. ✅ Add API key placeholder to app_config.dart
-5. ✅ Add `phone_numbers_parser` package to pubspec.yaml for validation
+**Original Tasks (Sent.dm):**
+1. ✅ Created implementation document
+2. ✅ Signed up for Sent.dm API
+3. ✅ Got API key from dashboard
+4. ✅ Added API key to app_config.dart
+5. ✅ Added `phone_numbers_parser` package
 
-**Completed Time:** 15 minutes
+**Migration Tasks (Twilio - v1.1.13):**
+1. ✅ Created Twilio account (https://www.twilio.com/try-twilio)
+2. ✅ Obtained Account SID and Auth Token
+3. ✅ Added credentials to backend/.env
+4. ✅ Migrated backend code to Twilio API v2
+5. ✅ Updated Flutter models to parse Twilio responses
+
+**Completed Time:** 4 hours (including migration)
 
 ---
 
-### **Phase 2: Backend Services** ✅ COMPLETED
+### **Phase 2: Backend Services** ✅ COMPLETED & MIGRATED
 
-**Tasks:**
-1. ✅ Create `PhoneSearchResult` model (`lib/models/phone_search_result.dart`)
-   - Fields: callerName, carrier, lineType, fraudScore, location, etc.
-   - Factory method for Sent.dm API response parsing
-   - Helper methods: hasCallerName, isMobile, isHighRisk, etc.
+**Original Tasks (Sent.dm):**
+1. ✅ Created `PhoneSearchResult` model
+   - Factory method: `fromSentdmResponse()` (DEPRECATED)
+   - Helper methods: hasCallerName, isMobile, etc.
 
-2. ✅ Create `PhoneSearchService` (`lib/services/phone_search_service.dart`)
-   - Method: `validatePhoneFormat()` - offline validation ✅
-   - Method: `formatToE164()` - E.164 formatting ✅
-   - Method: `searchPhoneWithCredit()` - integrated credit deduction ✅
-   - Method: `_lookupPhone()` - API call to Sent.dm ✅
-   - Error handling for API failures ✅
-   - Rate limit handling (429 errors) ✅
-   - Custom exceptions: PhoneSearchException, InsufficientCreditsException, RateLimitException ✅
+2. ✅ Created `PhoneSearchService`
+   - Method: `validatePhoneFormat()` - offline validation
+   - Method: `formatToE164()` - E.164 formatting
+   - Method: `searchPhoneWithCredit()` - backend deducts 2 credits + logs search
+   - Method: `_lookupPhone()` - API calls
+   - Error handling and rate limiting
+
+**Migration Updates (Twilio - v1.1.13):**
+1. ✅ Updated `PhoneSearchResult` model
+   - Added: `fromTwilioResponse()` factory method
+   - Parses Twilio's nested JSON structure (line_type_intelligence, caller_name)
+   - Deprecated: `fromSentdmResponse()` (kept for compatibility)
+
+2. ✅ Updated `PhoneSearchService`
+   - Changed API call to use Twilio endpoint
+   - Updated response parsing to use `fromTwilioResponse()`
+   - Maintained all error handling and credit logic
 
 3. ✅ Update Supabase schema
    - Added phone_number column to searches table
@@ -136,7 +184,7 @@ Authorization: Bearer YOUR_API_KEY
 
 **Tasks:**
 1. ✅ Integrate with credit system
-   - Deducts 1 credit per phone lookup via Supabase RPC
+   - Deducts 2 credits per phone lookup via backend RPC
    - Shows insufficient credits dialog
    - Records transaction in credit_transactions table
    - Real-time credit updates
@@ -239,12 +287,21 @@ User Input (Phone Number)
 
 ## 🔐 Configuration
 
-**app_config.dart additions:**
-```dart
-// Sent.dm Phone Lookup API
-static const String SENTDM_API_KEY = 'your_api_key_here';
-static const String SENTDM_API_URL = 'https://www.sent.dm/api/phone-lookup';
+**backend/.env (Current - Twilio):**
+```env
+# Twilio Lookup API v2
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+**app_config.dart (Historical - Sent.dm DEPRECATED):**
+```dart
+// Sent.dm Phone Lookup API (DEPRECATED as of v1.1.13)
+static const String SENTDM_API_KEY = 'your_api_key_here';  // NO LONGER USED
+static const String SENTDM_API_URL = 'https://www.sent.dm/api/phone-lookup';  // DEPRECATED
+```
+
+**Note:** Phone lookup now uses backend-only API calls to Twilio. No API keys exposed to client.
 
 ---
 
@@ -287,7 +344,7 @@ class SearchHistoryEntry {
 │  └───────────────────────────┘ │
 │                                 │
 │  [Search Phone Number]          │
-│  Cost: 1 credit                 │
+│  Cost: 2 credits                │
 │                                 │
 └─────────────────────────────────┘
 ```
@@ -326,22 +383,30 @@ class SearchHistoryEntry {
 
 ## ⚠️ Known Limitations & Considerations
 
-1. **Rate Limiting:** 15 requests/minute
-   - For <5k users: Sufficient
-   - Implement caching to reduce duplicate lookups
-   - Show "Please wait" if rate limited
+1. **API Costs (Twilio):**
+   - $0.018 per lookup (Line Type + CNAM)
+   - Users pay 2 credits; backend handles deduction/refunds
+   - Monitor usage via Twilio Console
 
-2. **CNAM Availability:**
+2. **Rate Limiting:**
+   - Twilio: Enterprise-grade (very high limits)
+   - App-level: 15 requests/minute (configurable)
+   - Implement caching to reduce duplicate lookups
+
+3. **CNAM Availability:**
    - Not all numbers have CNAM data
    - Handle "Name not available" gracefully
+   - Primarily US/Canada coverage for CNAM
 
-3. **International Numbers:**
-   - Sent.dm supports international, but CNAM primarily US/Canada
-   - Still shows carrier/line type for international
+4. **International Numbers:**
+   - Twilio supports 200+ countries
+   - CNAM primarily US/Canada
+   - Still shows carrier/line type globally
 
-4. **API Reliability:**
-   - Implement fallback error messages
-   - Cache successful results
+5. **API Reliability:**
+   - Twilio: 99.95% uptime SLA
+   - Enterprise-grade infrastructure
+   - Automatic credit refunds on failures
 
 ---
 
@@ -397,21 +462,24 @@ class SearchHistoryEntry {
   - Marked all tasks as complete
   - Ready for testing phase
 
-**Total Time Spent:** ~4.5 hours
-**Status:** ✅ **FEATURE COMPLETE - READY FOR TESTING**
+**Total Time Spent (Original):** ~4.5 hours
+**Migration Time (Twilio):** ~4 hours
+**Status:** ✅ **FEATURE COMPLETE & MIGRATED TO TWILIO**
 
 **Components Created:**
-- lib/models/phone_search_result.dart (205 lines)
-- lib/services/phone_search_service.dart (279 lines)
+- lib/models/phone_search_result.dart (205 lines) - Updated with Twilio parser
+- lib/services/phone_search_service.dart (279 lines) - Updated for Twilio
 - lib/screens/phone_results_screen.dart (545 lines)
 - Modified lib/screens/search_screen.dart (added ~150 lines)
+- backend/routers/phone_lookup.py - Completely rewritten for Twilio
 - PHONE_LOOKUP_SCHEMA_UPDATE.sql (53 lines)
 
-**Next Steps:**
-- 🔄 User testing on simulator 333
-- 🔄 Validate API integration with real phone numbers
-- 🔄 Test edge cases and error scenarios
-- 🔄 Version bump to 1.1.6+12 when ready for release
+**Migration Complete:**
+- ✅ v1.1.13+20 deployed to production
+- ✅ Backend using Twilio Lookup API v2
+- ✅ Tested on simulator "666"
+- ✅ Production endpoint verified
+- ✅ Documentation updated
 
 ---
 
@@ -437,10 +505,22 @@ class SearchHistoryEntry {
 
 ## 📚 References
 
-- Sent.dm API Docs: https://www.sent.dm/resources/phone-lookup
-- OpenAPI Spec: https://www.sent.dm/phone/openapi.yaml
-- libphonenumber Package: https://pub.dev/packages/libphonenumber
-- Phone Number Package: https://pub.dev/packages/phone_number
+**Current (Twilio):**
+- Twilio Lookup API v2 Docs: https://www.twilio.com/docs/lookup/v2-api
+- Twilio Console: https://console.twilio.com
+- Twilio Pricing: https://www.twilio.com/lookup/pricing
+- Account Setup: https://www.twilio.com/try-twilio
+
+**Flutter Packages:**
+- phone_numbers_parser: https://pub.dev/packages/phone_numbers_parser
+
+**Historical (Sent.dm - DEPRECATED):**
+- Sent.dm API Docs: https://www.sent.dm/resources/phone-lookup (NO LONGER USED)
+- OpenAPI Spec: https://www.sent.dm/phone/openapi.yaml (DEPRECATED)
+
+**Migration Documentation:**
+- [Twilio Migration Complete](../../TWILIO_MIGRATION_COMPLETE.md)
+- [Release Notes v1.1.13](../../releases/RELEASE_NOTES_v1.1.13.md)
 
 ---
 
@@ -449,7 +529,7 @@ class SearchHistoryEntry {
 Feature is complete when:
 1. ✅ Users can search phone numbers from search screen
 2. ✅ Caller name is retrieved and displayed
-3. ✅ 1 credit is deducted per search
+3. ✅ 2 credits are deducted per search
 4. ✅ Phone searches appear in search history
 5. ✅ All error cases are handled gracefully
 6. ✅ UI is polished and consistent with app design
@@ -458,5 +538,5 @@ Feature is complete when:
 
 ---
 
-**Last Updated:** 2025-11-28 (Feature Complete)
-**Status:** Ready for user testing and validation
+**Last Updated:** 2025-12-03 (Migrated to Twilio)
+**Status:** ✅ Production-ready with Twilio Lookup API v2

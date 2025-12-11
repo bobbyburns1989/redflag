@@ -200,7 +200,7 @@ class _StoreScreenState extends State<StoreScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'searches remaining',
+            'credits available',
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
         ],

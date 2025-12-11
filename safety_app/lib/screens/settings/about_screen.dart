@@ -350,7 +350,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   const SizedBox(height: 16),
                   _buildCreditItem(
                     'Data Sources',
-                    'Offenders.io • TinEye • Sent.dm',
+                    'Offenders.io • TinEye • Twilio Lookup',
                   ),
                   _buildCreditItem(
                     'Framework',

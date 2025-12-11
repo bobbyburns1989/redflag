@@ -7,6 +7,8 @@ This prevents client-side manipulation of credit balances.
 All credit operations are performed using Supabase RPC functions for atomic transactions.
 """
 
+import json
+import re
 from typing import Dict, Any, Optional
 from fastapi import HTTPException, status
 from .supabase_client import get_admin_client
@@ -103,6 +105,7 @@ class CreditService:
         """
         try:
             # Call Supabase RPC function for atomic credit deduction
+            print(f"🔵 [CREDIT] Calling RPC deduct_credit_for_search for user {user_id}, cost: {cost}")
             response = self.supabase.rpc(
                 "deduct_credit_for_search",
                 {
@@ -113,7 +116,18 @@ class CreditService:
                 }
             ).execute()
 
+            print(f"✅ [CREDIT] RPC execute() completed successfully")
             result = response.data
+
+            # Handle case where response.data is a string instead of dict
+            if isinstance(result, str):
+                try:
+                    result = json.loads(result)
+                except json.JSONDecodeError as je:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Failed to parse RPC response: {str(je)}"
+                    )
 
             if not result or not result.get("success"):
                 error = result.get("error", "unknown_error")
@@ -138,9 +152,43 @@ class CreditService:
         except HTTPException:
             raise
         except Exception as e:
+            # WORKAROUND: Supabase Python client sometimes throws exceptions
+            # when RPC returns JSON type instead of JSONB. The actual response
+            # is embedded in the exception details as a byte string.
+            print(f"⚠️ [CREDIT] RPC execute() threw exception: {type(e).__name__}")
+            error_str = str(e)
+
+            # Try to extract JSON from byte string in error details
+            # Format: "...'details': 'b\\'{\"success\" : true, ...}\\'..."
+            byte_match = re.search(r"b\\'({[^}]+})\\'", error_str)
+            if not byte_match:
+                # Try alternative format: b'{...}'
+                byte_match = re.search(r"b'({.+?})'", error_str)
+
+            if byte_match:
+                try:
+                    # Extract and parse the JSON from the byte string
+                    json_str = byte_match.group(1)
+                    # Unescape any escaped quotes
+                    json_str = json_str.replace('\\"', '"')
+                    result = json.loads(json_str)
+
+                    # If we successfully parsed it and it has success=true, use it!
+                    if result.get("success"):
+                        print(f"✅ [CREDIT] Extracted successful result from exception - search_id: {result.get('search_id')}, credits: {result.get('credits')}")
+                        return {
+                            "search_id": result.get("search_id"),
+                            "credits": result.get("credits"),
+                            "success": True,
+                        }
+                except (json.JSONDecodeError, KeyError, ValueError) as parse_error:
+                    print(f"❌ [CREDIT] Failed to parse embedded JSON from error: {parse_error}")
+
+            # If we couldn't extract valid JSON, raise the original error
+            print(f"❌ [CREDIT] Could not extract valid JSON, raising error")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Credit validation error: {str(e)}"
+                detail=f"Credit validation error: {error_str}"
             )
 
     async def refund_credit(
@@ -184,6 +232,15 @@ class CreditService:
             ).execute()
 
             result = response.data
+
+            # Handle case where response.data is a string instead of dict
+            if isinstance(result, str):
+                try:
+                    result = json.loads(result)
+                except json.JSONDecodeError:
+                    # Refunds are best-effort, log but don't fail
+                    print(f"Warning: Failed to parse refund RPC response for user {user_id}")
+                    return {"credits": 0, "success": False, "error": "parse_error"}
 
             if not result or not result.get("success"):
                 error = result.get("error", "unknown_error")

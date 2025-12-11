@@ -120,8 +120,7 @@ EXCEPTION
       'error', 'database_error',
       'message', SQLERRM
     );
-END;
-$$;
+END;          
 
 -- =====================================================
 -- 2. Create update_search_results() helper function

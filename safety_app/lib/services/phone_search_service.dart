@@ -9,7 +9,8 @@ import '../models/phone_search_result.dart';
 /// Service for phone number lookup and validation.
 ///
 /// Handles phone number validation, formatting, and reverse lookup
-/// using the Sent.dm API, with credit deduction integration.
+/// via the backend (Twilio Lookup API v2). Backend is the single source
+/// of truth for credit deduction (2 credits) and refunds.
 class PhoneSearchService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -38,7 +39,7 @@ class PhoneSearchService {
   /// Parse and format phone number to E.164 format (US only)
   ///
   /// E.164 is the international phone number format (e.g., +12345678900)
-  /// Required by the Sent.dm API. Always formats as US number (+1).
+  /// Required by Twilio Lookup API. Always formats as US number (+1).
   String? formatToE164(String phoneNumber) {
     try {
       // For US-only formatting, always parse with US country code
@@ -83,12 +84,9 @@ class PhoneSearchService {
   ///
   /// This is the main method that:
   /// 1. Validates the phone number
-  /// 2. Checks user credits
-  /// 3. Deducts 1 credit
-  /// 4. Calls Sent.dm API
-  /// 5. Logs the search
-  /// 6. Returns the result
-  /// 7. **NEW**: Refunds credit if API fails (503, 500, timeout, etc.)
+  /// 2. Ensures user is authenticated
+  /// 3. Calls backend API (deducts 2 credits + logs search + refunds on failure)
+  /// 4. Returns the result
   Future<PhoneSearchResult> searchPhoneWithCredit(String phoneNumber) async {
     if (kDebugMode) {
       print('📞 [PHONE] Starting phone lookup for: $phoneNumber');
@@ -104,71 +102,15 @@ class PhoneSearchService {
       print('📞 [PHONE] Formatted to E.164: $e164');
     }
 
-    // Step 2: Check and deduct credit via Supabase function
+    // Step 2: Backend handles credit deduction (2 credits per lookup)
     final user = _supabase.auth.currentUser;
     if (user == null) {
       throw PhoneSearchException('User not authenticated');
     }
 
-    String? searchId;
-    bool creditDeducted = false;
-
     try {
-      // Call Supabase RPC function to deduct credit and log search
-      final response = await _supabase.rpc(
-        'deduct_credit_for_search',
-        params: {
-          'p_user_id': user.id,
-          'p_query': e164,
-          'p_results_count': 0, // Will update after API call
-        },
-      );
-
-      if (kDebugMode) {
-        print('📞 [PHONE] Credit deduction response: $response');
-      }
-
-      // Check if credit deduction was successful
-      if (response['success'] != true) {
-        final error = response['error'];
-        if (error == 'insufficient_credits') {
-          throw InsufficientCreditsException(
-            'Not enough credits. You have ${response['credits']} credits.',
-          );
-        }
-        throw PhoneSearchException('Failed to deduct credit: $error');
-      }
-
-      searchId = response['search_id'];
-      creditDeducted = true;
-      final remainingCredits = response['credits'];
-
-      if (kDebugMode) {
-        print('📞 [PHONE] Credit deducted. Remaining: $remainingCredits');
-        print('📞 [PHONE] Search ID: $searchId');
-      }
-
-      // Step 3: Call Sent.dm API
+      // Step 3: Call backend API (deducts credits + logs history)
       final result = await _lookupPhone(e164);
-
-      // Step 4: Update search results count
-      if (searchId != null) {
-        try {
-          await _supabase
-              .from('searches')
-              .update({
-                'results_count': 1, // Phone lookup always returns 1 result
-                'phone_number': e164,
-                'search_type': 'phone',
-              })
-              .eq('id', searchId);
-        } catch (e) {
-          if (kDebugMode) {
-            print('⚠️ [PHONE] Failed to update search history: $e');
-          }
-          // Don't fail the search if history update fails
-        }
-      }
 
       if (kDebugMode) {
         print(
@@ -178,12 +120,6 @@ class PhoneSearchService {
 
       return result;
     } catch (e) {
-      // Refund credit if API call failed and credit was deducted
-      if (creditDeducted && searchId != null && _shouldRefund(e)) {
-        await _refundCredit(searchId, _getRefundReason(e));
-      }
-
-      // Re-throw the original error
       if (e is PhoneSearchException || e is InsufficientCreditsException) {
         rethrow;
       }
@@ -197,7 +133,7 @@ class PhoneSearchService {
   /// Call backend API for phone lookup
   ///
   /// Private method that makes the actual API call to our secure backend.
-  /// The backend handles Sent.dm API integration server-side.
+  /// The backend handles Twilio Lookup API integration server-side.
   Future<PhoneSearchResult> _lookupPhone(String e164Phone) async {
     if (kDebugMode) {
       print('📞 [PHONE] Calling backend phone lookup API...');
@@ -240,9 +176,9 @@ class PhoneSearchService {
       // Handle response
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        // Backend passes through Sent.dm response data in metadata field
-        // Use the same parser since backend preserves the original structure
-        return PhoneSearchResult.fromSentdmResponse(
+        // Backend passes through Twilio response data in metadata field
+        // Use Twilio parser to handle the response structure
+        return PhoneSearchResult.fromTwilioResponse(
           jsonData['metadata'] ?? jsonData,
           e164Phone,
         );
@@ -287,139 +223,6 @@ class PhoneSearchService {
         print('❌ [PHONE] API call failed: $e');
       }
       throw PhoneSearchException('Unexpected error: ${e.toString()}');
-    }
-  }
-
-  /// Check if error warrants a credit refund
-  ///
-  /// Returns true for server errors, timeouts, and network issues.
-  /// Returns false for client errors like invalid input (400, 404).
-  bool _shouldRefund(dynamic error) {
-    // Check PhoneSearchException messages for refundable errors
-    if (error is PhoneSearchException) {
-      final message = error.message.toLowerCase();
-
-      // Refund for server errors (503, 500, 502, 504)
-      if (message.contains('503') ||
-          message.contains('maintenance') ||
-          message.contains('500') ||
-          message.contains('502') ||
-          message.contains('504') ||
-          message.contains('server error')) {
-        return true;
-      }
-
-      // Refund for timeouts
-      if (message.contains('timeout') || message.contains('timed out')) {
-        return true;
-      }
-
-      // Refund for network errors
-      if (message.contains('network error') ||
-          message.contains('connection') ||
-          message.contains('no internet')) {
-        return true;
-      }
-
-      // Refund for API key issues (our fault, not user's)
-      if (message.contains('401') ||
-          message.contains('403') ||
-          message.contains('authentication failed')) {
-        return true;
-      }
-    }
-
-    // Refund for rate limit errors
-    if (error is RateLimitException) {
-      return true;
-    }
-
-    // Refund for HTTP client exceptions (network issues)
-    if (error is http.ClientException) {
-      return true;
-    }
-
-    // Don't refund for insufficient credits (not an API failure)
-    if (error is InsufficientCreditsException) {
-      return false;
-    }
-
-    return false;
-  }
-
-  /// Get refund reason code from error
-  ///
-  /// Maps errors to reason codes for tracking and display.
-  String _getRefundReason(dynamic error) {
-    if (error is PhoneSearchException) {
-      final message = error.message.toLowerCase();
-
-      if (message.contains('503') || message.contains('maintenance')) {
-        return 'api_maintenance_503';
-      }
-      if (message.contains('500')) return 'server_error_500';
-      if (message.contains('502')) return 'bad_gateway_502';
-      if (message.contains('504')) return 'gateway_timeout_504';
-      if (message.contains('timeout') || message.contains('timed out')) {
-        return 'request_timeout';
-      }
-      if (message.contains('network error') || message.contains('connection')) {
-        return 'network_error';
-      }
-      if (message.contains('401') ||
-          message.contains('403') ||
-          message.contains('authentication')) {
-        return 'api_auth_error';
-      }
-    }
-
-    if (error is RateLimitException) {
-      return 'rate_limit_429';
-    }
-
-    if (error is http.ClientException) {
-      return 'network_error';
-    }
-
-    return 'unknown_error';
-  }
-
-  /// Refund credit for failed search
-  ///
-  /// Calls Supabase RPC function to add 1 credit back to user's balance.
-  /// This is a best-effort operation - failures are logged but don't fail the search.
-  Future<void> _refundCredit(String searchId, String reason) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return;
-
-      if (kDebugMode) {
-        print('🔄 [PHONE] Refunding credit. Reason: $reason');
-      }
-
-      final response = await _supabase.rpc(
-        'refund_credit_for_failed_search',
-        params: {
-          'p_user_id': user.id,
-          'p_search_id': searchId,
-          'p_reason': reason,
-        },
-      );
-
-      if (kDebugMode) {
-        if (response['success'] == true) {
-          print(
-            '✅ [PHONE] Credit refunded. New balance: ${response['credits']}',
-          );
-        } else {
-          print('❌ [PHONE] Refund failed: ${response['error']}');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ [PHONE] Refund request failed: $e');
-      }
-      // Don't fail the original error - refund is best-effort
     }
   }
 

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,81 +10,40 @@ import 'search_service.dart' show InsufficientCreditsException;
 
 /// Service for performing reverse image searches via TinEye API
 ///
+/// **IMPORTANT**: Credit deduction handled by backend (single source of truth)
+/// Backend manages all credit operations, refunds, and search history
+///
 /// Handles:
 /// - Image upload to backend
 /// - URL-based image search
-/// - Credit deduction via Supabase
 /// - Error handling and user feedback
 class ImageSearchService {
   // Production backend URL (same as name search)
   static const String _baseUrl = 'https://pink-flag-api.fly.dev/api';
 
-  final _supabase = Supabase.instance.client;
+  final _supabase = Supabase.instance.client;  // Only used for JWT token
   final _authService = AuthService();
 
   /// Search by image file (from camera or gallery)
   ///
+  /// **IMPORTANT**: Credit deduction now handled by backend (single source of truth)
+  /// Backend manages credit validation, deduction, refunds, and search history
+  ///
   /// Uploads the image to the backend which then queries TinEye.
-  /// Deducts 1 credit from user's balance.
-  /// **NEW**: Refunds credit if API fails (500, timeout, network errors).
+  /// Backend deducts credits automatically (4 credits per image search).
   Future<ImageSearchResult> searchByImage(File imageFile) async {
     // 1. Check authentication
     if (!_authService.isAuthenticated) {
       throw Exception('You must be logged in to search');
     }
 
-    final userId = _authService.currentUser!.id;
-    final fileName = imageFile.path.split('/').last;
-    final query = 'IMAGE_SEARCH: $fileName';
-
-    String? searchId;
-    bool creditDeducted = false;
-
-    // 2. Deduct credit via Supabase RPC
     try {
-      final response = await _supabase.rpc(
-        'deduct_credit_for_search',
-        params: {'p_user_id': userId, 'p_query': query, 'p_results_count': 0},
-      );
-
-      if (response['success'] == false) {
-        if (response['error'] == 'insufficient_credits') {
-          throw InsufficientCreditsException(response['credits'] as int);
-        }
-        throw Exception('Failed to deduct credit: ${response['error']}');
-      }
-
-      searchId = response['search_id'];
-      creditDeducted = true;
-
-      // 3. Perform the image search
+      // 2. Backend handles credit deduction automatically
       final searchResult = await _uploadAndSearch(imageFile);
 
-      // 4. Update search record with results count (best effort)
-      try {
-        if (searchId != null) {
-          await _supabase
-              .from('searches')
-              .update({'results_count': searchResult.totalMatches})
-              .eq('id', searchId);
-        }
-      } catch (e) {
-        // Log but don't fail
-        if (kDebugMode) {
-          print('Failed to update search record: $e');
-        }
-      }
-
       return searchResult;
-    } on PostgrestException catch (e) {
-      throw Exception('Database error: ${e.message}');
     } catch (e) {
-      // Refund credit if API call failed and credit was deducted
-      if (creditDeducted && searchId != null && _shouldRefund(e)) {
-        await _refundCredit(searchId, _getRefundReason(e));
-      }
-
-      // Re-throw the original error
+      // Backend handles refunds automatically
       if (e is InsufficientCreditsException) rethrow;
       if (e is ApiException) rethrow;
       if (e is NetworkException) rethrow;
@@ -95,65 +53,24 @@ class ImageSearchService {
 
   /// Search by image URL
   ///
+  /// **IMPORTANT**: Credit deduction now handled by backend (single source of truth)
+  /// Backend manages credit validation, deduction, refunds, and search history
+  ///
   /// Sends the URL to the backend which fetches and searches the image.
-  /// Deducts 1 credit from user's balance.
-  /// **NEW**: Refunds credit if API fails (500, timeout, network errors).
+  /// Backend deducts credits automatically (4 credits per image search).
   Future<ImageSearchResult> searchByUrl(String imageUrl) async {
     // 1. Check authentication
     if (!_authService.isAuthenticated) {
       throw Exception('You must be logged in to search');
     }
 
-    final userId = _authService.currentUser!.id;
-    final query = 'IMAGE_SEARCH: $imageUrl';
-
-    String? searchId;
-    bool creditDeducted = false;
-
-    // 2. Deduct credit via Supabase RPC
     try {
-      final response = await _supabase.rpc(
-        'deduct_credit_for_search',
-        params: {'p_user_id': userId, 'p_query': query, 'p_results_count': 0},
-      );
-
-      if (response['success'] == false) {
-        if (response['error'] == 'insufficient_credits') {
-          throw InsufficientCreditsException(response['credits'] as int);
-        }
-        throw Exception('Failed to deduct credit: ${response['error']}');
-      }
-
-      searchId = response['search_id'];
-      creditDeducted = true;
-
-      // 3. Perform the URL search
+      // 2. Backend handles credit deduction automatically
       final searchResult = await _searchByUrlRequest(imageUrl);
 
-      // 4. Update search record with results count
-      try {
-        if (searchId != null) {
-          await _supabase
-              .from('searches')
-              .update({'results_count': searchResult.totalMatches})
-              .eq('id', searchId);
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Failed to update search record: $e');
-        }
-      }
-
       return searchResult;
-    } on PostgrestException catch (e) {
-      throw Exception('Database error: ${e.message}');
     } catch (e) {
-      // Refund credit if API call failed and credit was deducted
-      if (creditDeducted && searchId != null && _shouldRefund(e)) {
-        await _refundCredit(searchId, _getRefundReason(e));
-      }
-
-      // Re-throw the original error
+      // Backend handles refunds automatically
       if (e is InsufficientCreditsException) rethrow;
       if (e is ApiException) rethrow;
       if (e is NetworkException) rethrow;
@@ -308,123 +225,6 @@ class ImageSearchService {
     }
   }
 
-  /// Check if error warrants a credit refund
-  ///
-  /// Returns true for server errors, timeouts, and network issues.
-  /// Returns false for client errors like invalid input (400).
-  bool _shouldRefund(dynamic error) {
-    // Refund for server errors
-    if (error is ServerException) {
-      return true;
-    }
-
-    // Refund for network errors
-    if (error is NetworkException) {
-      return true;
-    }
-
-    // Refund for timeouts
-    if (error is TimeoutException) {
-      return true;
-    }
-
-    // Refund for HTTP client exceptions
-    if (error is SocketException || error is http.ClientException) {
-      return true;
-    }
-
-    // Don't refund for client errors (bad image, invalid URL)
-    if (error is ApiException) {
-      final message = error.toString().toLowerCase();
-      // Refund for 500+ errors, not for 400 errors
-      return message.contains('500') ||
-          message.contains('502') ||
-          message.contains('503') ||
-          message.contains('504') ||
-          message.contains('server error');
-    }
-
-    // Don't refund for insufficient credits
-    if (error is InsufficientCreditsException) {
-      return false;
-    }
-
-    return false;
-  }
-
-  /// Get refund reason code from error
-  String _getRefundReason(dynamic error) {
-    if (error is ServerException) {
-      return 'server_error_500';
-    }
-
-    if (error is NetworkException) {
-      final message = error.toString().toLowerCase();
-      if (message.contains('no internet') || message.contains('connection')) {
-        return 'network_error';
-      }
-      return 'network_error';
-    }
-
-    if (error is TimeoutException) {
-      return 'request_timeout';
-    }
-
-    if (error is SocketException) {
-      return 'network_error';
-    }
-
-    if (error is http.ClientException) {
-      return 'network_error';
-    }
-
-    if (error is ApiException) {
-      final message = error.toString().toLowerCase();
-      if (message.contains('503')) return 'api_maintenance_503';
-      if (message.contains('500')) return 'server_error_500';
-      if (message.contains('502')) return 'bad_gateway_502';
-      if (message.contains('504')) return 'gateway_timeout_504';
-      return 'server_error_500';
-    }
-
-    return 'unknown_error';
-  }
-
-  /// Refund credit for failed search
-  Future<void> _refundCredit(String searchId, String reason) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return;
-
-      if (kDebugMode) {
-        print('🔄 [IMAGE] Refunding credit. Reason: $reason');
-      }
-
-      final response = await _supabase.rpc(
-        'refund_credit_for_failed_search',
-        params: {
-          'p_user_id': user.id,
-          'p_search_id': searchId,
-          'p_reason': reason,
-        },
-      );
-
-      if (kDebugMode) {
-        if (response['success'] == true) {
-          print(
-            '✅ [IMAGE] Credit refunded. New balance: ${response['credits']}',
-          );
-        } else {
-          print('❌ [IMAGE] Refund failed: ${response['error']}');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ [IMAGE] Refund request failed: $e');
-      }
-      // Don't fail the original error - refund is best-effort
-    }
-  }
 
   /// Get current user's credit balance
   Future<int> getCurrentCredits() async {

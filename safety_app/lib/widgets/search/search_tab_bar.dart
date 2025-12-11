@@ -52,6 +52,9 @@ class SearchTabBar extends StatelessWidget {
   }) {
     final isSelected = selectedMode == mode;
 
+    // Credit costs: Name=10, Phone=2, Image=4
+    final creditCost = mode == 0 ? 10 : (mode == 1 ? 2 : 4);
+
     return Expanded(
       child: GestureDetector(
         onTap: () => onModeChanged(mode),
@@ -70,21 +73,35 @@ class SearchTabBar extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 16,
-                color: isSelected ? AppColors.primaryPink : AppColors.mediumText,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isSelected ? AppColors.primaryPink : AppColors.mediumText,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? AppColors.primaryPink : AppColors.mediumText,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
+              const SizedBox(height: 2),
               Text(
-                label,
+                '$creditCost credits',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? AppColors.primaryPink : AppColors.mediumText,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? AppColors.primaryPink.withValues(alpha: 0.7) : AppColors.mediumText.withValues(alpha: 0.7),
                 ),
               ),
             ],

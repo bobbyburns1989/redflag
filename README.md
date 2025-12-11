@@ -2,8 +2,8 @@
 
 > 🎉 **NOW LIVE ON THE APP STORE!** - A Flutter mobile application for checking public sex offender registries, phone lookups, and reverse image search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
 
-![Version](https://img.shields.io/badge/version-1.1.8-blue)
-![Status](https://img.shields.io/badge/status-LIVE%20ON%20APP%20STORE-success)
+![Version](https://img.shields.io/badge/version-1.1.13-blue)
+![Status](https://img.shields.io/badge/status-IN%20DEVELOPMENT-yellow)
 ![Platform](https://img.shields.io/badge/platform-iOS-lightgrey)
 ![Flutter](https://img.shields.io/badge/Flutter-3.32.8-02569B?logo=flutter)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
@@ -31,15 +31,16 @@
 
 **Pink Flag v1.1.8 is LIVE on the Apple App Store!** 🎉
 
-Pink Flag empowers women with access to public sex offender registry information, phone number lookups, and reverse image search through a user-friendly mobile application. Stay Safe, Stay Aware.
+Pink Flag empowers women with access to public sex offender registry information, phone number lookups with Twilio, and reverse image search through a user-friendly mobile application. Stay Safe, Stay Aware.
 
 ### 🚀 Production Status
 
-- ✅ **App Store**: LIVE and available for download (iOS)
+- ✅ **App Store**: v1.1.8 LIVE (v1.1.13 ready for submission)
 - ✅ **Backend**: Deployed on Fly.io (https://pink-flag-api.fly.dev)
 - ✅ **In-App Purchases**: Active via RevenueCat
-- ✅ **All Features**: Name search, Phone lookup, Image search operational
-- ✅ **Credit System**: Fully integrated with automatic refunds
+- ✅ **All Features**: Name search, Phone lookup (Twilio), Image search operational
+- ✅ **Credit System**: Variable credit costs per search type (v1.2.0) - Name: 10 credits, Phone: 2 credits, Image: 4 credits
+- ✅ **Phone Lookup**: Migrated to Twilio Lookup API v2 for enterprise reliability (v1.1.13)
 
 ### Key Principles
 
@@ -120,7 +121,7 @@ Access to public safety information should be easy, anonymous, and ethically gui
   - Verify if a photo is original or stolen
   - Detect fake profiles using stock photos
   - Identify catfishing attempts
-- **Cost**: 1 credit per search (same as name search)
+- **Cost**: 4 credits per search (user-friendly pricing based on TinEye API costs)
 
 ### 3. 📋 Results Display
 - **Clean card-based UI** for each potential match
@@ -337,7 +338,21 @@ User Display ← Results Screen ← API Service ← Match Results
 OFFENDERS_IO_API_KEY=your_actual_api_key_here
 ```
 
-#### 2. TinEye (Reverse Image Search)
+#### 2. Twilio Lookup API (Phone Number Validation)
+
+- **Coverage**: Global phone number database
+- **Features**: Caller Name (CNAM), Line Type Intelligence, Carrier Info
+- **Sign Up**: https://www.twilio.com/try-twilio
+- **Cost**: $0.018 per API call (2 credits per lookup in app)
+
+**Configuration:**
+
+```env
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+#### 3. TinEye (Reverse Image Search)
 
 - **Coverage**: Billions of indexed images worldwide
 - **Features**: Find where images appear online
@@ -350,7 +365,7 @@ OFFENDERS_IO_API_KEY=your_actual_api_key_here
 TINEYE_API_KEY=your_tineye_api_key_here
 ```
 
-#### 3. CrimeoMeter (Fallback - Optional)
+#### 4. CrimeoMeter (Fallback - Optional)
 
 - **Coverage**: United States
 - **Features**: Name + ZIP search
@@ -368,8 +383,12 @@ CRIMEOMETER_API_KEY=your_crimeometer_key  # Optional
 **backend/.env** (create from `.env.example`):
 
 ```env
-# Primary API
+# Primary API (Name Search)
 OFFENDERS_IO_API_KEY=your_offenders_io_key_here
+
+# Phone Lookup API (Twilio)
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Reverse Image Search API
 TINEYE_API_KEY=your_tineye_api_key_here

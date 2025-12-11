@@ -97,15 +97,19 @@ class AppConfig {
   static const String PRODUCT_ID_10_SEARCHES = 'pink_flag_10_searches';
   static const String PRODUCT_ID_25_SEARCHES = 'pink_flag_25_searches';
 
-  /// Initial credits for new users
-  static const int INITIAL_USER_CREDITS = 1;
+  /// Initial credits for new users (10x multiplier applied)
+  /// Enough for 1 name search OR 5 phone searches OR 2 image searches
+  static const int INITIAL_USER_CREDITS = 10;
 
-  /// Credits per search
-  static const int CREDITS_PER_SEARCH = 1;
+  /// Variable credit costs per search type (v1.2.0+)
+  /// Name: 10, Phone: 2, Image: 4 (user-friendly pricing)
+  static const int CREDITS_PER_NAME_SEARCH = 10;
+  static const int CREDITS_PER_PHONE_SEARCH = 2;
+  static const int CREDITS_PER_IMAGE_SEARCH = 4;
 
   // ==================== PHONE LOOKUP ====================
   // NOTE: Phone lookup is now handled server-side for security.
-  // The Sent.dm API key is secured on the backend and never exposed to clients.
+  // Twilio credentials are secured on the backend and never exposed to clients.
   // Phone lookups are made through: POST /api/phone/lookup
 
   /// Phone lookup rate limit (15 requests per minute - enforced on backend)

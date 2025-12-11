@@ -27,11 +27,11 @@ class PurchasePackage {
     final product = package.storeProduct;
     final isBestValue = package.identifier == 'ten_searches';
 
-    // Extract search count from identifier
-    int searchCount = 10; // Default
-    if (package.identifier.contains('3')) searchCount = 3;
-    if (package.identifier.contains('10')) searchCount = 10;
-    if (package.identifier.contains('25')) searchCount = 25;
+    // Extract credit count from identifier (10x multiplier from old search counts)
+    int searchCount = 100; // Default (was 10 searches)
+    if (package.identifier.contains('3')) searchCount = 30;  // 3 → 30 credits
+    if (package.identifier.contains('10')) searchCount = 100; // 10 → 100 credits
+    if (package.identifier.contains('25')) searchCount = 250; // 25 → 250 credits
 
     return PurchasePackage(
       id: package.identifier,
@@ -66,29 +66,30 @@ class PurchasePackage {
   }
 
   /// Default mock packages for development
+  /// Note: 10x credit multiplier applied (3 → 30, 10 → 100, 25 → 250)
   static List<PurchasePackage> getMockPackages() {
     return [
       PurchasePackage.mock(
         id: '3_searches',
-        title: '3 Searches',
-        description: 'Perfect for quick lookups',
+        title: '30 Credits',
+        description: '3-15 searches depending on type',
         price: '\$1.99',
-        searchCount: 3,
+        searchCount: 30,
       ),
       PurchasePackage.mock(
         id: '10_searches',
-        title: '10 Searches',
+        title: '100 Credits',
         description: 'Best value - Most popular!',
         price: '\$4.99',
-        searchCount: 10,
+        searchCount: 100,
         isBestValue: true,
       ),
       PurchasePackage.mock(
         id: '25_searches',
-        title: '25 Searches',
-        description: 'Maximum searches for power users',
+        title: '250 Credits',
+        description: 'Maximum credits for power users',
         price: '\$9.99',
-        searchCount: 25,
+        searchCount: 250,
       ),
     ];
   }

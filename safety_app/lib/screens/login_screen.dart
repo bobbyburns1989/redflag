@@ -66,6 +66,86 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// DEV ONLY: Bypass Apple Sign-In for testing
+  ///
+  /// This button only appears in debug mode and uses email/password auth
+  /// with test credentials (1@1.com / 111111).
+  ///
+  /// IMPORTANT: This will be automatically removed in production builds
+  /// since it's wrapped in a !dart.vm.product check.
+  Future<void> _handleDevBypass() async {
+    setState(() => _isAppleLoading = true);
+
+    final result = await _authService.signIn('1@1.com', '111111');
+
+    setState(() => _isAppleLoading = false);
+
+    if (!mounted) return;
+
+    if (result.success) {
+      CustomSnackbar.showSuccess(context, 'Dev login successful');
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      CustomSnackbar.showError(
+        context,
+        'Dev login failed: ${result.error}\n\nMake sure test account exists in Supabase',
+      );
+    }
+  }
+
+  /// Build the dev bypass button (only visible in debug builds)
+  Widget _buildDevBypassButton() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orange, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.orange.withValues(alpha: 0.1),
+      ),
+      child: Column(
+        children: [
+          // Warning banner
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.warning, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Text(
+                  'DEVELOPMENT MODE ONLY',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Bypass button
+          TextButton.icon(
+            onPressed: _handleDevBypass,
+            icon: const Icon(Icons.bug_report, color: Colors.orange),
+            label: const Text(
+              'Test Login (1@1.com)',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,10 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.softPink.withValues(alpha: 0.3),
-              Colors.white,
-            ],
+            colors: [AppColors.softPink.withValues(alpha: 0.3), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -89,11 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo
-                  Icon(
-                    Icons.flag,
-                    size: 80,
-                    color: AppColors.primaryPink,
-                  ),
+                  Icon(Icons.flag, size: 80, color: AppColors.primaryPink),
                   const SizedBox(height: 16),
 
                   // Title
@@ -111,10 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Subtitle
                   Text(
                     'Log in to continue',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: AppColors.mediumText),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
@@ -129,6 +199,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                       height: 50,
                     ),
+                  const SizedBox(height: 16),
+
+                  // DEV ONLY: Bypass button for testing (only visible in debug mode)
+                  if (!const bool.fromEnvironment('dart.vm.product'))
+                    _buildDevBypassButton(),
                   const SizedBox(height: 24),
 
                   // Info text about Apple Sign-In
@@ -151,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Sign in with Apple keeps your information private and secure.',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[700],
+                              color: AppColors.darkText,
                             ),
                           ),
                         ),
@@ -166,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'Don\'t have an account? ',
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(color: AppColors.mediumText),
                       ),
                       TextButton(
                         onPressed: () {

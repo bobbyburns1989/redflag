@@ -192,7 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsTile(
                       icon: Icons.shopping_bag_outlined,
                       title: 'Buy More Credits',
-                      subtitle: 'Purchase search credits',
+                      subtitle: 'Purchase credits for searches',
                       onTap: () => Navigator.pushNamed(context, '/store'),
                     ),
                     _buildSettingsTile(
@@ -388,7 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   Text(
-                    'searches remaining',
+                    'credits available',
                     style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   ),
                 ],

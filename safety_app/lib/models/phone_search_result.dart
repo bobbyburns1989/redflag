@@ -1,7 +1,7 @@
-/// Model representing a phone number lookup result from Sent.dm API.
+/// Model representing a phone number lookup result from Twilio Lookup API v2.
 ///
 /// Contains caller identification information, carrier details,
-/// fraud risk assessment, and other phone number intelligence.
+/// line type intelligence, and other phone number data.
 class PhoneSearchResult {
   /// The phone number that was searched (E.164 format)
   final String phoneNumber;
@@ -58,7 +58,45 @@ class PhoneSearchResult {
     this.rawData,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  /// Create PhoneSearchResult from Sent.dm API response
+  /// Create PhoneSearchResult from Twilio Lookup API v2 response
+  factory PhoneSearchResult.fromTwilioResponse(
+    Map<String, dynamic> json,
+    String searchedPhone,
+  ) {
+    // Extract data from Twilio Lookup API v2 response format
+    final lineTypeIntel = json['line_type_intelligence'] as Map<String, dynamic>?;
+    final callerNameData = json['caller_name'] as Map<String, dynamic>?;
+
+    final String? callerName = callerNameData?['caller_name']?.toString();
+    final String? nationalFmt = json['national_format']?.toString();
+    final String? country = json['country_code']?.toString();
+    final String? carrierName = lineTypeIntel?['carrier_name']?.toString();
+    final String? type = lineTypeIntel?['type']?.toString();
+    final bool? valid = json['valid'] as bool?;
+
+    // Twilio provides detailed location in line_type_intelligence
+    String? locationStr;
+    if (country != null) {
+      locationStr = country;
+    }
+
+    return PhoneSearchResult(
+      phoneNumber: json['phone_number']?.toString() ?? searchedPhone,
+      nationalFormat: nationalFmt,
+      callerName: callerName,
+      countryCode: country,
+      carrier: carrierName,
+      lineType: type,
+      location: locationStr,
+      isValid: valid ?? true,  // Twilio validates by default
+      isPorted: null,  // Not included in basic Twilio response
+      fraudScore: null,  // Available with SMS Pumping Risk package
+      riskLevel: null,   // Available with SMS Pumping Risk package
+      rawData: json,
+    );
+  }
+
+  /// Create PhoneSearchResult from Sent.dm API response (DEPRECATED)
   factory PhoneSearchResult.fromSentdmResponse(
     Map<String, dynamic> json,
     String searchedPhone,

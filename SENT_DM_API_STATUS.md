@@ -1,8 +1,25 @@
-# Sent.dm Phone Lookup API - Status Report
+# Sent.dm Phone Lookup API - DEPRECATED
 
-**Date**: November 29, 2025
+**Date**: December 3, 2025
+**Status**: ❌ **DEPRECATED - MIGRATED TO TWILIO**
+
+---
+
+## ⚠️ IMPORTANT: Service Migrated
+
+**This service is no longer used by Pink Flag.**
+
+As of **v1.1.13**, phone lookup has been migrated to **Twilio Lookup API v2** for improved reliability and data quality.
+
+**See:** [TWILIO_MIGRATION_COMPLETE.md](TWILIO_MIGRATION_COMPLETE.md) for migration details.
+
+---
+
+## Historical Status Report
+
+**Original Date**: November 29, 2025
 **Reporter**: Claude Code
-**Status**: ⚠️ **API UNDER MAINTENANCE**
+**Historical Status**: ⚠️ **API UNDER MAINTENANCE**
 
 ---
 

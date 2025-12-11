@@ -1,9 +1,14 @@
-# Credit Refund System - Pink Flag v1.1.7
+# Credit Refund System - Pink Flag v1.1.7+
 
 **Feature:** Automatic credit refunds for failed API requests
 **Start Date:** 2025-11-28
-**Target Version:** v1.1.7
-**Status:** 📋 PLANNING
+**Target Version:** v1.1.7+
+**Status:** ✅ IMPLEMENTED
+
+**Note:** As of v1.2.0, the app uses variable credit costs:
+- Name search: 10 credits
+- Phone search: 2 credits
+- Image search: 4 credits
 
 ---
 
@@ -15,9 +20,9 @@ Implement automatic credit refund logic to protect users from losing credits due
 - Network timeouts
 - Service outages
 
-**Current Problem:** Users lose 1 credit when API calls fail, even when it's not their fault.
+**Current Problem:** Users lose credits when API calls fail, even when it's not their fault.
 
-**Solution:** Automatically refund credits when searches fail due to server/network issues.
+**Solution:** Automatically refund credits when searches fail due to server/network issues (refund amount matches the search cost).
 
 ---
 
@@ -33,9 +38,9 @@ Implement automatic credit refund logic to protect users from losing credits due
 **Current Flow:**
 ```
 1. User initiates search
-2. ✅ Deduct 1 credit via deduct_credit_for_search() RPC
-3. ❌ Call external API (FastPeopleSearch, Sent.dm, TinEye)
-4. If API fails → Credit is LOST ⚠️
+2. ✅ Deduct credits via deduct_credit_for_search() RPC (variable cost: 10/2/4 for name/phone/image)
+3. ❌ Call external API (Offenders.io, Twilio, TinEye)
+4. If API fails → Credits are LOST ⚠️ (unless refunded)
 5. Update search history with results count
 ```
 
@@ -120,8 +125,8 @@ BEGIN
   FROM users
   WHERE id = p_user_id;
 
-  -- Add 1 credit back
-  v_new_credits := v_current_credits + 1;
+  -- Add credits back (amount matches the search type cost)
+  v_new_credits := v_current_credits + p_amount;
 
   -- Update user credits
   UPDATE users
@@ -190,7 +195,7 @@ ON searches(refunded, user_id);
 No changes needed - we'll use existing fields:
 - `transaction_type` = 'refund'
 - `provider` = refund reason (e.g., "503_maintenance", "timeout", etc.)
-- `credits` = 1 (always refund 1 credit)
+- `credits` = amount (refund matches search cost: 10 for name, 2 for phone, 4 for image)
 - `status` = 'completed'
 
 ---
@@ -385,7 +390,8 @@ class CreditTransaction {
 ┌────────────────────────────────┐
 │ 🔄 Credit Refunded            │
 │ API Maintenance                │
-│ Nov 28, 2025 • +1 credit       │
+│ Nov 28, 2025 • +10 credits     │  (name search)
+│ Nov 28, 2025 • +2 credits      │  (phone search)
 └────────────────────────────────┘
 ```
 

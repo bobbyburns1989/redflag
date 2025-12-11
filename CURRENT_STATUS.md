@@ -1,11 +1,64 @@
 # Pink Flag - Current Development Status
 
-**Last Updated**: November 29, 2025
-**Status**: 🎉 **LIVE ON APP STORE** ✅ | Backend Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
+**Last Updated**: December 8, 2025
+**Status**: 🎉 **LIVE ON APP STORE** ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
 
 ---
 
 ## 🎯 Recent Accomplishments
+
+### 💰 Variable Credit System v1.2.0 (DEPLOYED - December 8, 2025)
+
+The variable credit cost system has been successfully deployed to production! 🚀
+
+**Problem Solved**: All search types were charging a flat 1 credit regardless of actual API costs, resulting in:
+- Name searches ($0.20/search) losing money at 1 credit
+- Phone/Image searches ($0.018-$0.04) overcharging relative to name searches
+- Inconsistent value proposition for users
+
+**Solution Implemented**: Variable credit costs that reflect actual third-party API pricing.
+
+**New Credit Costs (LIVE)**:
+- **Name Search**: 10 credits ($0.20 via Offenders.io)
+- **Phone Search**: 2 credits ($0.018 via Twilio Lookup v2)
+- **Image Search**: 4 credits ($0.04 via TinEye)
+
+**Implementation Details**:
+1. ✅ Database migration completed - All user credits multiplied by 10x
+2. ✅ Backend routers updated with variable costs (commit 85cf0fa)
+3. ✅ Deployed to Fly.io as version 18
+4. ✅ All refund handlers updated to match new costs
+5. ✅ Frontend already configured with correct constants
+
+**Migration Impact**:
+- Users with 50 credits → Now have 500 credits (same purchasing power maintained)
+- Users with 100 credits → Now have 1,000 credits
+- Credit packages updated: 30 → 300, 100 → 1,000, 250 → 2,500
+
+**Benefits**:
+- ✅ **Transparent Pricing**: Costs reflect actual API expenses
+- ✅ **User Value**: Phone and image searches now 60-80% cheaper relative to name searches
+- ✅ **Sustainable**: Pricing aligned with provider costs
+- ✅ **Flexible**: Easy to adjust individual search costs without affecting others
+
+**Deployment Timeline**:
+- Database migration: December 8, 2025 (before backend deployment)
+- Backend deployment: December 8, 2025, 7:05 AM PST
+- Status: ✅ LIVE in production (version 18)
+
+**Files Modified**:
+- `backend/routers/search.py` - Name: cost=10, refund=10
+- `backend/routers/phone_lookup.py` - Phone: cost=2, refund=2
+- `backend/routers/image_search.py` - Image: cost=4, refund=4
+
+**Documentation**:
+- See `VARIABLE_CREDIT_SYSTEM_IMPLEMENTATION.md` for complete design
+- See `VARIABLE_CREDIT_COSTS_SUMMARY.md` for pricing analysis
+- See `schemas/VARIABLE_CREDIT_MIGRATION.sql` for database migration
+
+**Status**: ✅ **LIVE IN PRODUCTION - All searches charging correct amounts**
+
+---
 
 ### 🔧 Search Screen Refactoring (COMPLETED - November 29, 2025)
 
@@ -191,7 +244,7 @@ A complete phone number reverse lookup feature has been added to Pink Flag! 🎉
 - **Search**: Phone number input with format validation (US & international)
 - **Results Display**: Caller name (CNAM), carrier, line type, location, fraud risk assessment
 - **Risk Assessment**: Color-coded risk levels (safe/medium/high) with fraud scores
-- **Integration**: 1 credit per lookup, search history tracking
+- **Integration**: 2 credits per lookup (Twilio Lookup API v2), search history tracking
 - **UX**: Copy-to-clipboard, loading states, error handling
 
 **API Integration**:
@@ -513,6 +566,10 @@ Swift Compiler Error (Xcode): 'SubscriptionPeriod' is ambiguous for type lookup 
 | Nov 29, 2025 | Sandbox purchase testing verified | ✅ Complete |
 | Nov 29, 2025 | App Store submission and approval | ✅ Complete |
 | Nov 29, 2025 | Pink Flag v1.1.8 LIVE ON APP STORE | 🎉 **LAUNCHED** |
+| Dec 8, 2025 | Variable credit system database migration (10x multiplier) | ✅ Complete |
+| Dec 8, 2025 | Backend variable credit costs implemented (commit 85cf0fa) | ✅ Complete |
+| Dec 8, 2025 | Backend v18 deployed to Fly.io with variable costs | ✅ Complete |
+| Dec 8, 2025 | Variable Credit System v1.2.0 DEPLOYED | 🎉 **LIVE** |
 
 ---
 

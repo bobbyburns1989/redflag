@@ -43,27 +43,28 @@ class _StoreScreenState extends State<StoreScreen> {
   bool _isPurchasing = false;
 
   // Mock packages for preview when RevenueCat not configured
+  // Updated for v1.2.0 variable credit system (10x multiplier)
   final List<MockPackage> _mockPackages = [
     MockPackage(
       id: '3_searches',
-      title: '3 Searches',
-      description: 'Perfect for quick lookups',
+      title: '30 Credits',
+      description: '3-15 searches depending on type',
       price: '\$1.99',
-      searchCount: 3,
+      searchCount: 30,
     ),
     MockPackage(
       id: '10_searches',
-      title: '10 Searches',
+      title: '100 Credits',
       description: 'Best value - Most popular!',
       price: '\$4.99',
-      searchCount: 10,
+      searchCount: 100,
     ),
     MockPackage(
       id: '25_searches',
-      title: '25 Searches',
-      description: 'Maximum searches for power users',
+      title: '250 Credits',
+      description: 'Maximum credits for power users',
       price: '\$9.99',
-      searchCount: 25,
+      searchCount: 250,
     ),
   ];
 
@@ -259,7 +260,7 @@ class _StoreScreenState extends State<StoreScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Purchase Credits'),
         content: Text(
-          'Add ${mockPackage.searchCount} search credits to your account for ${mockPackage.price}?\n\n'
+          'Add ${mockPackage.searchCount} credits to your account for ${mockPackage.price}?\n\n'
           'Note: This is a test purchase. Real payments require RevenueCat configuration.',
         ),
         actions: [
@@ -377,7 +378,7 @@ class _StoreScreenState extends State<StoreScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'searches remaining',
+                        'credits available',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],

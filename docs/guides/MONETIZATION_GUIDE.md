@@ -41,16 +41,20 @@ Onboarding → Login/Signup (Apple Sign-In) → Search
 
 ---
 
-## Credit Packages
+## Credit Packages (v1.2.0+ Variable Pricing)
 
-| Package | Price | Credits | Cost per Search | Savings |
-|---------|-------|---------|-----------------|---------|
-| **Starter** | $1.99 | 3 | $0.66 | - |
-| **Popular** | $4.99 | 10 | $0.50 | 24% |
-| **Best Value** | $9.99 | 25 | $0.40 | 40% |
+| Package | Price | Credits | Value |
+|---------|-------|---------|-------|
+| **Starter** | $1.99 | 30 | 3 name OR 15 phone OR 7 image searches |
+| **Popular** | $4.99 | 100 | 10 name OR 50 phone OR 25 image searches |
+| **Best Value** | $9.99 | 250 | 25 name OR 125 phone OR 62 image searches |
 
-**Backend Cost**: $0.20 per search (Offenders.io API)
-**Net Profit**: 33-56% after Apple's 30% cut
+**Variable Search Costs (v1.2.0+)**:
+- Name Search: 10 credits (Offenders.io: $0.20/call)
+- Phone Search: 2 credits (Twilio: $0.018/call)
+- Image Search: 4 credits (TinEye: $0.04/call)
+
+**Net Profit**: 43-74% after Apple's 30% cut (varies by search type)
 
 ---
 
@@ -59,9 +63,9 @@ Onboarding → Login/Signup (Apple Sign-In) → Search
 ### Dashboard Configuration
 
 1. **Create Products** (Already Done ✅)
-   - Product ID: `pink_flag_3_searches` → 3 credits
-   - Product ID: `pink_flag_10_searches` → 10 credits
-   - Product ID: `pink_flag_25_searches` → 25 credits
+   - Product ID: `pink_flag_3_searches` → 30 credits (v1.2.0+)
+   - Product ID: `pink_flag_10_searches` → 100 credits (v1.2.0+)
+   - Product ID: `pink_flag_25_searches` → 250 credits (v1.2.0+)
 
 2. **Create Offering** (Required for Production)
    - Name: "default"
@@ -146,7 +150,7 @@ Future<void> addCredits(int amount, String source)
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users,
   email TEXT,
-  credits INTEGER DEFAULT 1, -- 1 free credit on signup
+  credits INTEGER DEFAULT 10, -- 10 free credits on signup (v1.2.0+)
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```

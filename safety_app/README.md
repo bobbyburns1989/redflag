@@ -16,8 +16,8 @@ Pink Flag is a mobile safety app that helps users perform background checks thro
 - **Fraud Risk Assessment**: Color-coded risk levels (safe/medium/high) for phone lookups
 
 ### Credit System
-- **Pay-Per-Search**: 1 credit per search across all search types
-- **RevenueCat Integration**: In-app purchases (3, 10, or 25 credits)
+- **Variable Pricing**: Name = 10 credits, Phone = 2 credits, Image = 4 credits
+- **RevenueCat Integration**: In-app purchases (30, 100, or 250 credits)
 - **Real-Time Balance**: Credit counter updates instantly
 - **Transaction History**: View all purchases and searches
 - **Search History**: Review past searches with privacy controls
@@ -61,7 +61,7 @@ Pink Flag is a mobile safety app that helps users perform background checks thro
 - ✅ Phone lookup feature complete
 - ✅ Credit refund system implemented
 - ✅ Settings screen complete
-- ⏳ Testing pending (Sent.dm API currently in maintenance)
+- ✅ Phone lookup running on Twilio Lookup API v2 (2 credits per lookup)
 
 ## Recent Updates
 
@@ -100,12 +100,12 @@ Pink Flag is a mobile safety app that helps users perform background checks thro
 - `CREDIT_REFUND_ROADMAP.md` - Implementation plan (600 lines)
 - `RELEASE_NOTES_v1.1.7.md` - Comprehensive release notes (550+ lines)
 
-**Status**: Implementation complete ✅ | Database schema ready for deployment | Testing pending when Sent.dm API is back online
+**Status**: Implementation complete ✅ | Database schema ready for deployment | Phone lookup migrated to Twilio (live)
 
 ### Version 1.1.5 (November 28, 2025) - Phone Lookup Feature 📱
 
 **Phone Number Reverse Lookup**
-- Integrated free Sent.dm API for phone lookups
+- Integrated Sent.dm API for phone lookups (initial launch) → Migrated to Twilio Lookup API v2 in v1.1.13 (2 credits per lookup)
 - Caller name (CNAM), carrier, line type, location data
 - Fraud risk assessment with color-coded risk levels
 - Phone number validation and E.164 formatting
@@ -113,7 +113,7 @@ Pink Flag is a mobile safety app that helps users perform background checks thro
 
 **Search Interface Update**
 - 3-tab segmented control: Name | Phone | Image
-- Consistent 1-credit cost across all search types
+- Variable credit costs now live (Name 10, Phone 2, Image 4)
 - Phone search history tracking in database
 
 **Files Created**
@@ -288,11 +288,12 @@ flutter run -d 333
   - `GET /health` - Health check
 
 ### Phone Lookup API
-- **Provider**: Sent.dm (100% FREE)
-- **Rate Limit**: 15 requests/minute
-- **Coverage**: US, Canada, UK, International
-- **Endpoint**: `https://api.sent.dm/lookup`
-- **API Key**: Configured in `app_config.dart`
+- **Provider**: Twilio Lookup API v2
+- **Rate Limit**: App-level 15 requests/minute (cost control)
+- **Coverage**: Global (Line Type + CNAM where available)
+- **Endpoint**: `https://lookups.twilio.com/v2/PhoneNumbers/{phone}`
+- **Credits**: 2 credits per lookup (maps to ~$0.07 user spend)
+- **Credentials**: Stored on backend only (not in app_config)
 
 ### Supabase Backend
 - **Auth**: Email/password + Apple Sign-In
@@ -304,9 +305,9 @@ flutter run -d 333
 
 ### RevenueCat
 - **Products**:
-  - `pink_flag_3_searches` - $1.99 (3 credits)
-  - `pink_flag_10_searches` - $4.99 (10 credits)
-  - `pink_flag_25_searches` - $9.99 (25 credits)
+  - `pink_flag_3_searches` - $1.99 (30 credits)
+  - `pink_flag_10_searches` - $4.99 (100 credits)
+  - `pink_flag_25_searches` - $9.99 (250 credits)
 - **API Key**: `appl_IRhHyHobKGcoteGnlLRWUFgnIos`
 - **Version**: purchases_flutter ^9.9.4
 
@@ -357,17 +358,13 @@ flutter run -d 333
 
 ## Known Issues
 
-### Sent.dm API Status
-- **Current Status**: API in maintenance (503 errors)
-- **Impact**: Phone lookup temporarily unavailable
-- **Refund Protection**: Credits automatically refunded for failed phone searches
-- **ETA**: Unknown - monitoring API status
+- None currently blocking; monitor Twilio spend and Offenders.io availability.
 
 ## Configuration
 
 ### Environment Variables
 - Supabase URL and Anon Key
-- Sent.dm API Key
+- Twilio Account SID and Auth Token
 - RevenueCat API Key
 - Backend API URL
 
@@ -418,7 +415,7 @@ Proprietary - All rights reserved
 - Flutter framework and community
 - Supabase for backend infrastructure
 - RevenueCat for monetization platform
-- Sent.dm for free phone lookup API
+- Twilio Lookup API for phone lookups
 - TinEye for reverse image search
 - Offenders.io for registry data access
 - Material Design guidelines
