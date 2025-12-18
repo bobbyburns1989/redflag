@@ -85,10 +85,10 @@ class AppConfig {
   static const String APP_TAGLINE = 'Stay Safe, Stay Aware';
 
   /// App version (must match pubspec.yaml)
-  static const String APP_VERSION = '1.1.8';
+  static const String APP_VERSION = '1.2.2';
 
   /// App build number
-  static const String BUILD_NUMBER = '14';
+  static const String BUILD_NUMBER = '25';
 
   // ==================== CREDIT PACKAGES ====================
 

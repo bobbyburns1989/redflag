@@ -2,8 +2,8 @@
 
 > 🎉 **NOW LIVE ON THE APP STORE!** - A Flutter mobile application for checking public sex offender registries, phone lookups, and reverse image search. Stay Safe, Stay Aware. Built with privacy, ethics, and personal safety in mind.
 
-![Version](https://img.shields.io/badge/version-1.1.13-blue)
-![Status](https://img.shields.io/badge/status-IN%20DEVELOPMENT-yellow)
+![Version](https://img.shields.io/badge/version-1.2.2-blue)
+![Status](https://img.shields.io/badge/status-PRODUCTION-green)
 ![Platform](https://img.shields.io/badge/platform-iOS-lightgrey)
 ![Flutter](https://img.shields.io/badge/Flutter-3.32.8-02569B?logo=flutter)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
@@ -29,18 +29,18 @@
 
 ## 🎯 Project Overview
 
-**Pink Flag v1.1.8 is LIVE on the Apple App Store!** 🎉
+**Pink Flag v1.2.2 is ready for the Apple App Store!** 🎉
 
 Pink Flag empowers women with access to public sex offender registry information, phone number lookups with Twilio, and reverse image search through a user-friendly mobile application. Stay Safe, Stay Aware.
 
 ### 🚀 Production Status
 
-- ✅ **App Store**: v1.1.8 LIVE (v1.1.13 ready for submission)
+- ✅ **App Store**: v1.2.2 (Build 25) - Ready for submission
 - ✅ **Backend**: Deployed on Fly.io (https://pink-flag-api.fly.dev)
 - ✅ **In-App Purchases**: Active via RevenueCat
 - ✅ **All Features**: Name search, Phone lookup (Twilio), Image search operational
-- ✅ **Credit System**: Variable credit costs per search type (v1.2.0) - Name: 10 credits, Phone: 2 credits, Image: 4 credits
-- ✅ **Phone Lookup**: Migrated to Twilio Lookup API v2 for enterprise reliability (v1.1.13)
+- ✅ **Credit System**: Variable credit costs per search type (v1.2.0+) - Name: 10 credits, Phone: 2 credits, Image: 4 credits
+- ✅ **Phone Lookup**: Twilio Lookup API v2 for enterprise reliability
 
 ### Key Principles
 
