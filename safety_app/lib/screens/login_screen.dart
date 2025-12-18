@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Handle Apple Sign-In
+  /// Handle Apple Sign-In with enhanced error handling
   Future<void> _handleAppleSignIn() async {
     if (!_isAppleAvailable) {
       CustomSnackbar.showError(
@@ -59,10 +59,40 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result.success) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
+      // Enhanced error handling with context-specific messages
+      String errorMessage = result.error ?? 'Sign in failed';
+      String? actionLabel;
+      VoidCallback? action;
+
       // Don't show error for cancelled sign-in
-      if (result.error != 'Sign in was cancelled') {
-        CustomSnackbar.showError(context, result.error ?? 'Sign in failed');
+      if (errorMessage.contains('cancelled')) {
+        return;
       }
+
+      // Provide specific guidance based on error type
+      if (errorMessage.toLowerCase().contains('network')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+        actionLabel = 'Retry';
+        action = _handleAppleSignIn;
+      } else if (errorMessage.toLowerCase().contains('unavailable')) {
+        errorMessage = 'Apple Sign-In requires iOS 13+. Please update your device.';
+        actionLabel = 'Help';
+        action = () {
+          // Could launch help page or email support
+        };
+      } else {
+        errorMessage = 'Sign in failed. Please try again or contact support.';
+        actionLabel = 'Retry';
+        action = _handleAppleSignIn;
+      }
+
+      CustomSnackbar.showError(
+        context,
+        errorMessage,
+        actionLabel: actionLabel,
+        onAction: action,
+        duration: const Duration(seconds: 6),
+      );
     }
   }
 
@@ -91,6 +121,17 @@ class _LoginScreenState extends State<LoginScreen> {
         'Dev login failed: ${result.error}\n\nMake sure test account exists in Supabase',
       );
     }
+  }
+
+  /// Build a bullet point for the info box
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 6),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 13, color: AppColors.darkText),
+      ),
+    );
   }
 
   /// Build the dev bypass button (only visible in debug builds)
@@ -165,9 +206,35 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo
-                  Icon(Icons.flag, size: 80, color: AppColors.primaryPink),
-                  const SizedBox(height: 16),
+                  // Pink Flag Logo (branded)
+                  Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryPink,
+                          AppColors.deepPink,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryPink.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.flag,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
                   // Title
                   Text(
@@ -189,15 +256,99 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Apple Sign-In button (only option)
-                  if (_isAppleLoading)
-                    LoadingWidgets.centered()
-                  else if (_isAppleAvailable)
-                    SignInWithAppleButton(
-                      onPressed: _handleAppleSignIn,
-                      style: SignInWithAppleButtonStyle.black,
-                      borderRadius: BorderRadius.circular(12),
+                  // Apple Sign-In button with inline loading
+                  if (_isAppleAvailable)
+                    SizedBox(
                       height: 50,
+                      child: Stack(
+                        children: [
+                          // Apple Sign-In button
+                          SignInWithAppleButton(
+                            onPressed: _isAppleLoading
+                                ? () {}
+                                : () => _handleAppleSignIn(),
+                            style: SignInWithAppleButtonStyle.black,
+                            borderRadius: BorderRadius.circular(12),
+                            height: 50,
+                          ),
+                          // Loading overlay (only shown when loading)
+                          if (_isAppleLoading)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  // Fallback UI for unsupported devices
+                  else
+                    Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.warning_amber,
+                                color: Colors.orange,
+                                size: 48,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Apple Sign-In Unavailable',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade900,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Apple Sign-In requires iOS 13+ and an Apple ID.\n\n'
+                                'Please update your device or contact support for assistance.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () {
+                            // Launch support email
+                            CustomSnackbar.showInfo(
+                              context,
+                              'Contact support at support@pinkflagapp.com',
+                              duration: const Duration(seconds: 5),
+                            );
+                          },
+                          icon: const Icon(Icons.help_outline),
+                          label: const Text('Contact Support'),
+                        ),
+                      ],
                     ),
                   const SizedBox(height: 16),
 
@@ -206,30 +357,56 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildDevBypassButton(),
                   const SizedBox(height: 24),
 
-                  // Info text about Apple Sign-In
+                  // Why Apple Sign-In? (Enhanced info box)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.lightPink.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryPink.withValues(alpha: 0.1),
+                          AppColors.softPink.withValues(alpha: 0.2),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.primaryPink.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.security,
-                          color: AppColors.primaryPink,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Sign in with Apple keeps your information private and secure.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.darkText,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryPink,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.security,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Why Apple Sign-In?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.darkText,
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 12),
+                        _buildBulletPoint(
+                            '🔒 Maximum privacy - we never see your email'),
+                        _buildBulletPoint(
+                            '⚡ One-tap login - no passwords to remember'),
+                        _buildBulletPoint('🛡️ Prevents abuse of free credits'),
                       ],
                     ),
                   ),
