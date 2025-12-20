@@ -1,7 +1,40 @@
 # Pink Flag - Current Development Status
 
-**Last Updated**: December 17, 2025
-**Status**: 🎉 **v1.2.2 READY FOR APP STORE** ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
+**Last Updated**: December 19, 2025
+**Status**: 🚨 **CRITICAL FIX DEPLOYED** ✅ | Webhook v1.2.3.1 FIXED ✅ | v1.2.2 READY FOR APP STORE ✅ | Variable Credit System v1.2.0 COMPLETE ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Production Ready ✅
+
+---
+
+## 🚨 Critical Fix - Webhook Credit Amounts (v1.2.3.1 - December 19, 2025)
+
+**URGENT HOTFIX DEPLOYED** - RevenueCat webhook was awarding incorrect credit amounts! 🔥
+
+**Problem**: After the v1.2.0 variable credit system migration (Dec 8), the webhook was never updated:
+- Users purchasing credits received **90% fewer credits** than paid for
+- $1.99 package gave 3 credits instead of 30 ❌
+- $4.99 package gave 10 credits instead of 100 ❌
+- $9.99 package gave 25 credits instead of 250 ❌
+
+**Root Cause**: Database and backend were updated with 10x multiplier, but webhook still used old values (3/10/25).
+
+**Fix Applied** (December 19, 2025):
+1. ✅ Updated webhook credit amounts: `supabase/functions/revenuecat-webhook/index.ts`
+   - `pink_flag_3_searches`: 3 → **30 credits**
+   - `pink_flag_10_searches`: 10 → **100 credits**
+   - `pink_flag_25_searches`: 25 → **250 credits**
+2. ✅ Deployed to Supabase (LIVE NOW)
+3. ✅ Hardened credit mapping in `purchase_package.dart` (explicit map instead of `.contains()`)
+4. ✅ Removed duplicate StoreScreen code (425 lines cleaned up)
+
+**Status**: ✅ **DEPLOYED TO PRODUCTION** - Webhook now awards correct credit amounts
+
+**Impact**: All future purchases will receive correct credits. Previous affected purchases (if any) may need manual credit adjustment.
+
+**Pending Action**:
+- ⏳ **Test in sandbox** - Verify 30/100/250 credits awarded correctly
+- ⏳ **Update product metadata** - See `APP_STORE_PRODUCT_METADATA_UPDATE.md` for guide
+
+**Documentation**: See `WEBHOOK_FIX_v1.2.3.1.md` for complete details
 
 ---
 

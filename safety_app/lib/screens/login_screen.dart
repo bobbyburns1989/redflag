@@ -4,7 +4,6 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_snackbar.dart';
-import '../widgets/loading_widgets.dart';
 
 /// Login screen with Apple Sign-In as the ONLY option
 ///
@@ -75,7 +74,8 @@ class _LoginScreenState extends State<LoginScreen> {
         actionLabel = 'Retry';
         action = _handleAppleSignIn;
       } else if (errorMessage.toLowerCase().contains('unavailable')) {
-        errorMessage = 'Apple Sign-In requires iOS 13+. Please update your device.';
+        errorMessage =
+            'Apple Sign-In requires iOS 13+. Please update your device.';
         actionLabel = 'Help';
         action = () {
           // Could launch help page or email support
@@ -212,10 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 100,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          AppColors.primaryPink,
-                          AppColors.deepPink,
-                        ],
+                        colors: [AppColors.primaryPink, AppColors.deepPink],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -228,11 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.flag,
-                      size: 60,
-                      color: Colors.white,
-                    ),
+                    child: Icon(Icons.flag, size: 60, color: Colors.white),
                   ),
                   const SizedBox(height: 20),
 
@@ -403,9 +396,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildBulletPoint(
-                            '🔒 Maximum privacy - we never see your email'),
+                          '🔒 Maximum privacy - we never see your email',
+                        ),
                         _buildBulletPoint(
-                            '⚡ One-tap login - no passwords to remember'),
+                          '⚡ One-tap login - no passwords to remember',
+                        ),
                         _buildBulletPoint('🛡️ Prevents abuse of free credits'),
                       ],
                     ),

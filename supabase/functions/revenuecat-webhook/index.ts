@@ -135,15 +135,15 @@ serve(async (req) => {
 
     switch (productId) {
       case 'pink_flag_3_searches':
-        creditsToAdd = 3
+        creditsToAdd = 30  // v1.2.0+ variable credit system (10x multiplier)
         expectedPrice = 1.99
         break
       case 'pink_flag_10_searches':
-        creditsToAdd = 10
+        creditsToAdd = 100  // v1.2.0+ variable credit system (10x multiplier)
         expectedPrice = 4.99
         break
       case 'pink_flag_25_searches':
-        creditsToAdd = 25
+        creditsToAdd = 250  // v1.2.0+ variable credit system (10x multiplier)
         expectedPrice = 9.99
         break
       default:

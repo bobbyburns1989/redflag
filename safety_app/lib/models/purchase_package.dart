@@ -25,13 +25,27 @@ class PurchasePackage {
   /// Create from RevenueCat Package
   factory PurchasePackage.fromRevenueCat(Package package) {
     final product = package.storeProduct;
-    final isBestValue = package.identifier == 'ten_searches';
 
-    // Extract credit count from identifier (10x multiplier from old search counts)
-    int searchCount = 100; // Default (was 10 searches)
-    if (package.identifier.contains('3')) searchCount = 30;  // 3 → 30 credits
-    if (package.identifier.contains('10')) searchCount = 100; // 10 → 100 credits
-    if (package.identifier.contains('25')) searchCount = 250; // 25 → 250 credits
+    // Explicit mapping for credit amounts (v1.2.0+ variable credit system)
+    // Product IDs must match App Store Connect and webhook configuration
+    const creditMap = {
+      'pink_flag_3_searches': 30,   // $1.99 - Starter package
+      'pink_flag_10_searches': 100, // $4.99 - Popular package (best value)
+      'pink_flag_25_searches': 250, // $9.99 - Power user package
+      // Legacy identifiers (if they exist)
+      '3_searches': 30,
+      '10_searches': 100,
+      '25_searches': 250,
+      'ten_searches': 100, // RevenueCat default identifier
+    };
+
+    // Get credit count from map, default to 100 if unknown
+    final searchCount = creditMap[package.identifier] ?? 100;
+
+    // Best value is the 100-credit package
+    final isBestValue = package.identifier == 'pink_flag_10_searches' ||
+                        package.identifier == 'ten_searches' ||
+                        package.identifier == '10_searches';
 
     return PurchasePackage(
       id: package.identifier,
