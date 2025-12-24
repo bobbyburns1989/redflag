@@ -1,8 +1,9 @@
 # App Store Connect - Product Metadata Update Guide
 
 **Date**: December 19, 2025
+**Updated**: December 22, 2025
 **Purpose**: Update in-app purchase product titles/descriptions to reflect variable credit system (v1.2.0+)
-**Status**: Pending App Store Connect update
+**Status**: ✅ **COMPLETE** - All products updated in App Store Connect
 
 ---
 
@@ -112,11 +113,11 @@
 
 After completing updates:
 
-- [ ] All 3 products updated in App Store Connect
-- [ ] Display names show "Credits" (not "Searches")
-- [ ] Descriptions explain variable search costs
-- [ ] No errors or warnings in App Store Connect
-- [ ] Changes submitted for review (if required)
+- [x] All 3 products updated in App Store Connect (Dec 22, 2025)
+- [x] Display names show "Credits" (not "Searches")
+- [x] Descriptions explain variable search costs
+- [x] No errors or warnings in App Store Connect
+- [x] Changes saved (no review required for metadata-only)
 - [ ] RevenueCat dashboard reflects new product names (wait 2-4 hours)
 - [ ] Test purchase in app shows new product names
 
@@ -216,8 +217,27 @@ If you support multiple languages:
 
 ---
 
-**Last Updated**: December 19, 2025
-**Next Review**: After App Store Connect changes go live
+**Last Updated**: December 22, 2025
+**Status**: ✅ **COMPLETE** - Product metadata updated
+**Next Review**: After RevenueCat sync (2-4 hours from Dec 22, 2025)
+
+---
+
+## 📋 Completion Summary (December 22, 2025)
+
+All 3 products successfully updated in App Store Connect:
+
+✅ **pink_flag_3_searches**: Now shows "30 Credits" with usage examples
+✅ **pink_flag_10_searches**: Now shows "100 Credits" with usage examples
+✅ **pink_flag_25_searches**: Now shows "250 Credits" with usage examples
+
+**Next Steps**:
+1. Wait 2-4 hours for RevenueCat to sync the new product names
+2. Test in production app - store screen should show updated names
+3. Monitor user feedback for pricing clarity improvements
+4. See `RELEASE_NOTES_v1.2.5.md` for complete documentation
+
+---
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 

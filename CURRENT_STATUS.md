@@ -1,7 +1,7 @@
 # Pink Flag - Current Development Status
 
-**Last Updated**: December 19, 2025
-**Status**: 🚨 **CRITICAL FIX DEPLOYED** ✅ | Webhook v1.2.3.1 FIXED ✅ | v1.2.2 READY FOR APP STORE ✅ | Variable Credit System v1.2.0 COMPLETE ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Production Ready ✅
+**Last Updated**: December 22, 2025
+**Status**: 🎯 **PRICING CLARITY UPDATE** ✅ | v1.2.5 Ready ✅ | Product Metadata Updated ✅ | Webhook v1.2.3.1 FIXED ✅ | Variable Credit System v1.2.0 COMPLETE ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Production Ready ✅
 
 ---
 
@@ -35,6 +35,59 @@
 - ⏳ **Update product metadata** - See `APP_STORE_PRODUCT_METADATA_UPDATE.md` for guide
 
 **Documentation**: See `WEBHOOK_FIX_v1.2.3.1.md` for complete details
+
+---
+
+## 🎯 Recent Accomplishments
+
+### 🏷️ Pricing Clarity Update v1.2.5 (READY - December 22, 2025)
+
+Successfully updated App Store Connect product metadata to reflect variable credit system! 🎉
+
+**Problem Solved**: Product names showed old "Searches" terminology instead of "Credits", confusing users about variable pricing.
+
+**Solution Implemented**: Updated all 3 product listings in App Store Connect with accurate credit amounts and usage examples.
+
+**Product Metadata Updates (LIVE)**:
+1. **pink_flag_3_searches**: "3 Searches" → "**30 Credits**"
+   - Description: "30 credits - 3 name searches OR 15 phone searches OR 7 image searches"
+
+2. **pink_flag_10_searches**: "10 Searches" → "**100 Credits**"
+   - Description: "100 credits - 10 name searches OR 50 phone searches OR 25 image searches"
+
+3. **pink_flag_25_searches**: "25 Searches" → "**250 Credits**"
+   - Description: "250 credits - 25 name searches OR 125 phone searches OR 62 image searches"
+
+**Implementation Details**:
+1. ✅ App Store Connect products updated with credit terminology
+2. ✅ Version bumped to 1.2.5+28 (pubspec.yaml and app_config.dart)
+3. ✅ Flutter clean + pub get completed
+4. ✅ Pod install completed
+5. ✅ Xcode ready for archiving
+6. ⏳ RevenueCat sync (2-4 hours) - automatic
+
+**Benefits**:
+- ✅ **Clear Pricing**: Users understand they're buying credits, not fixed searches
+- ✅ **Usage Examples**: Each product shows how many of each search type
+- ✅ **Transparency**: Variable costs (name=10, phone=2, image=4) clearly communicated
+- ✅ **Better Conversion**: Clear value proposition improves purchase decisions
+
+**Status**: ✅ **METADATA LIVE IN APP STORE CONNECT** - RevenueCat will sync automatically
+
+**Important Note**: These metadata changes go live **without requiring an app update**. Users will see updated product names automatically after RevenueCat syncs (2-4 hours).
+
+**Files Modified**:
+- `pubspec.yaml` - Version 1.2.4+27 → 1.2.5+28
+- `lib/config/app_config.dart` - APP_VERSION 1.2.4 → 1.2.5, BUILD_NUMBER 27 → 28
+
+**Documentation**:
+- See `RELEASE_NOTES_v1.2.5.md` for complete details
+- See `APP_STORE_PRODUCT_METADATA_UPDATE.md` for metadata change guide (marked complete)
+
+**Timeline**:
+- Product metadata update: December 22, 2025 (completed)
+- RevenueCat sync: 2-4 hours after update (automatic)
+- App release v1.2.5: Optional (for documentation purposes)
 
 ---
 
@@ -603,6 +656,12 @@ Swift Compiler Error (Xcode): 'SubscriptionPeriod' is ambiguous for type lookup 
 | Dec 8, 2025 | Backend variable credit costs implemented (commit 85cf0fa) | ✅ Complete |
 | Dec 8, 2025 | Backend v18 deployed to Fly.io with variable costs | ✅ Complete |
 | Dec 8, 2025 | Variable Credit System v1.2.0 DEPLOYED | 🎉 **LIVE** |
+| Dec 19, 2025 | Webhook credit amounts fixed (v1.2.4) | ✅ Complete |
+| Dec 22, 2025 | App Store Connect product metadata updated (30, 100, 250 Credits) | ✅ Complete |
+| Dec 22, 2025 | Version bumped to 1.2.5+28 | ✅ Complete |
+| Dec 22, 2025 | Release notes v1.2.5 created | ✅ Complete |
+| Dec 22, 2025 | Xcode prepared for archive | ✅ Complete |
+| Dec 22, 2025 | Pricing Clarity Update v1.2.5 READY | 🎯 **READY** |
 
 ---
 
@@ -815,10 +874,10 @@ Swift Compiler Error (Xcode): 'SubscriptionPeriod' is ambiguous for type lookup 
 
 ---
 
-**Current Version**: v1.2.2 (Build 25) - Ready for App Store Submission
-**Previous Version**: v1.2.1 (Build 24) - Live on App Store
-**Release Date**: December 17, 2025
-**Next Milestone**: Submit v1.2.2 to App Store Connect
+**Current Version**: v1.2.5 (Build 28) - Ready for App Store Submission
+**Previous Version**: v1.2.4 (Build 27) - Live on App Store
+**Release Date**: December 22, 2025
+**Next Milestone**: Submit v1.2.5 to App Store Connect (optional - metadata already live)
 
 ---
 
