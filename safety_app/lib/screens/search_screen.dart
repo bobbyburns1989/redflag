@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:image_picker/image_picker.dart';
 import '../services/search_service.dart';
 import '../services/image_search_service.dart';
@@ -11,10 +12,11 @@ import '../theme/app_colors.dart';
 import '../widgets/dialogs/out_of_credits_dialog.dart';
 import '../widgets/page_transitions.dart';
 import '../widgets/search/credit_badge.dart';
-import '../widgets/search/search_tab_bar.dart';
+import '../widgets/search/search_mode_selector.dart';
 import '../widgets/search/phone_search_form.dart';
 import '../widgets/search/image_search_form.dart';
 import '../widgets/search/name_search_form.dart';
+import '../widgets/search/welcome_header.dart';
 import 'results_screen.dart';
 import 'image_results_screen.dart';
 import 'phone_results_screen.dart';
@@ -380,7 +382,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
     // Validate phone format offline first
     if (!_phoneSearchService.validatePhoneFormat(phoneNumber)) {
-      setState(() => _errorMessage = 'Please enter a valid 10-digit US phone number');
+      setState(
+        () => _errorMessage = 'Please enter a valid 10-digit US phone number',
+      );
       return;
     }
 
@@ -390,7 +394,9 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final result = await _phoneSearchService.searchPhoneWithCredit(phoneNumber);
+      final result = await _phoneSearchService.searchPhoneWithCredit(
+        phoneNumber,
+      );
 
       if (!mounted) return;
 
@@ -440,100 +446,162 @@ class _SearchScreenState extends State<SearchScreen> {
     showOutOfCreditsDialog(context, currentCredits);
   }
 
+  /// Builds the current search form based on selected mode.
+  /// Uses ValueKey to trigger AnimatedSwitcher transitions.
+  Widget _buildCurrentForm() {
+    switch (_searchMode) {
+      case 0:
+        return NameSearchForm(
+          key: const ValueKey<int>(0),
+          firstNameController: _firstNameController,
+          lastNameController: _lastNameController,
+          ageController: _ageController,
+          stateController: _stateController,
+          phoneController: _phoneController,
+          zipCodeController: _zipCodeController,
+          showOptionalFilters: _showOptionalFilters,
+          onOptionalFiltersChanged: (expanded) {
+            setState(() => _showOptionalFilters = expanded);
+          },
+          onSearch: _performSearch,
+          onClear: _clearForm,
+          errorMessage: _errorMessage,
+          isLoading: _isLoading,
+        );
+      case 1:
+        return PhoneSearchForm(
+          key: const ValueKey<int>(1),
+          phoneNumberController: _phoneNumberController,
+          onSearch: _performPhoneSearch,
+          onClear: _clearPhoneForm,
+          errorMessage: _errorMessage,
+          isLoading: _isLoading,
+        );
+      case 2:
+      default:
+        return ImageSearchForm(
+          key: const ValueKey<int>(2),
+          selectedImage: _selectedImage,
+          urlController: _urlController,
+          onPickFromGallery: _pickFromGallery,
+          onTakePhoto: _takePhoto,
+          onClearImage: _clearImageSelection,
+          onSearch: _performImageSearch,
+          errorMessage: _errorMessage,
+          isLoading: _isLoading,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.palePink,
-      appBar: AppBar(
-        title: Text(
-          'Search Registry',
-          style: TextStyle(
-            color: AppColors.primaryPink,
-            fontWeight: FontWeight.w600,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.palePink, AppColors.lightPink],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: AppColors.darkText,
-        actions: [
-          CreditBadge(credits: _currentCredits),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: AppColors.softPink.withValues(alpha: 0.5),
-            height: 1,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SearchTabBar(
-                    selectedMode: _searchMode,
-                    onModeChanged: (mode) => setState(() => _searchMode = mode),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            systemOverlayStyle: SystemUiOverlayStyle.light,
+            title: Text(
+              'Search Registry',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+            ),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(gradient: AppColors.appBarGradient),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            foregroundColor: Colors.white,
+            actions: [CreditBadge.onDark(credits: _currentCredits)],
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const WelcomeHeader(),
                   const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, AppColors.softWhite],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.softPink.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SearchModeSelector(
+                            selectedMode: _searchMode,
+                            onModeChanged: (mode) =>
+                                setState(() => _searchMode = mode),
+                          ),
+                          const SizedBox(height: 20),
 
-                  // Conditional content based on search mode
-                  if (_searchMode == 0) ...[
-                    // ======== NAME SEARCH FORM ========
-                    NameSearchForm(
-                      firstNameController: _firstNameController,
-                      lastNameController: _lastNameController,
-                      ageController: _ageController,
-                      stateController: _stateController,
-                      phoneController: _phoneController,
-                      zipCodeController: _zipCodeController,
-                      showOptionalFilters: _showOptionalFilters,
-                      onOptionalFiltersChanged: (expanded) {
-                        setState(() => _showOptionalFilters = expanded);
-                      },
-                      onSearch: _performSearch,
-                      onClear: _clearForm,
-                      errorMessage: _errorMessage,
-                      isLoading: _isLoading,
+                          // Animated form switching with smooth transitions
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                // Respect reduced motion setting
+                                if (MediaQuery.of(context).disableAnimations) {
+                                  return child;
+                                }
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0.03, 0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: _buildCurrentForm(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ] else if (_searchMode == 1) ...[
-                    // ======== PHONE SEARCH FORM ========
-                    PhoneSearchForm(
-                      phoneNumberController: _phoneNumberController,
-                      onSearch: _performPhoneSearch,
-                      onClear: _clearPhoneForm,
-                      errorMessage: _errorMessage,
-                      isLoading: _isLoading,
-                    ),
-                  ] else ...[
-                    // ======== IMAGE SEARCH FORM ========
-                    ImageSearchForm(
-                      selectedImage: _selectedImage,
-                      urlController: _urlController,
-                      onPickFromGallery: _pickFromGallery,
-                      onTakePhoto: _takePhoto,
-                      onClearImage: _clearImageSelection,
-                      onSearch: _performImageSearch,
-                      errorMessage: _errorMessage,
-                      isLoading: _isLoading,
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
