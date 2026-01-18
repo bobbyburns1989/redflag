@@ -162,6 +162,15 @@ schemas/
 - 🔧 Webhook credit values updated to 30/100/250 (v1.2.0 system)
 **Files**: splash_screen.dart, revenuecat_service.dart, auth_service.dart, webhook index.ts
 
+### January 18, 2026 - Resources Screen Refactoring
+**What**: Extracted 4 widgets from monolithic resources_screen.dart
+**Why**: File was 505 lines, needed better organization
+**Impact**:
+- 🚀 Main screen reduced from 505 to 177 lines (65% reduction)
+- 🧩 4 new reusable widgets created
+- ♻️ Follows same pattern as search_screen refactoring
+**Files**: lib/widgets/resources/* (4 new files)
+
 ### November 29, 2025 - Search Screen Refactoring
 **What**: Extracted 6 widgets from monolithic search_screen.dart
 **Why**: File was 1,364 lines (60% reduction to 545 lines)
@@ -208,8 +217,9 @@ schemas/
 - **No Search History Persistence**: By design (Apple Guideline 5.1.1)
 
 ### Technical Debt (Post-Launch)
-- [ ] Refactor resources_screen.dart (505 lines)
+- [x] Refactor resources_screen.dart (505 → 177 lines) ✅ COMPLETE
 - [ ] Add widget tests for extracted search components
+- [ ] Add widget tests for extracted resources components
 - [ ] Add integration tests for credit refund system
 - [ ] Monitor production performance and optimize as needed
 - [ ] Update database password (if not already done)
