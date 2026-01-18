@@ -7,6 +7,38 @@
 
 ## 🎯 Recent Accomplishments
 
+### 🔧 RevenueCat Purchase Attribution Fix (January 14, 2026)
+
+**CRITICAL FIX**: Purchases were not appearing in RevenueCat because user identity was not being set correctly.
+
+**Problems Fixed**:
+1. **Existing sessions skipped RC init**: When app launched with existing Supabase session, RevenueCat was never initialized with the user ID - purchases were attributed to anonymous users
+2. **No user identity management**: No `logIn/logOut` calls meant user switches weren't tracked
+3. **Webhook credit values outdated**: Still adding 3/10/25 instead of 30/100/250
+
+**Solutions Implemented**:
+1. ✅ `splash_screen.dart`: Now initializes RevenueCat for existing sessions before navigating to home
+2. ✅ `revenuecat_service.dart`: Added proper `logIn()` and `logOut()` methods with user identity tracking
+3. ✅ `auth_service.dart`: Now calls `RevenueCatService().logOut()` on sign out
+4. ✅ `index.ts` (webhook): Updated credit mapping to 30/100/250 for v1.2.0
+
+**Files Modified**:
+- `safety_app/lib/screens/splash_screen.dart` - Added RC init for existing sessions
+- `safety_app/lib/services/revenuecat_service.dart` - Added logIn/logOut, user tracking
+- `safety_app/lib/services/auth_service.dart` - Added RC logout on sign out
+- `supabase/functions/revenuecat-webhook/index.ts` - Updated credit values
+- `supabase/functions/revenuecat-webhook/README.md` - Updated documentation
+
+**Verification Checklist**:
+- [ ] Deploy webhook: `supabase functions deploy revenuecat-webhook`
+- [ ] Test purchase on device
+- [ ] Verify purchase appears in RevenueCat Dashboard under correct user ID
+- [ ] Verify credits are added (30/100/250)
+
+**Status**: ✅ Code complete, pending deployment and testing
+
+---
+
 ### 💰 Variable Credit System v1.2.0 (DEPLOYED - December 8, 2025)
 
 The variable credit cost system has been successfully deployed to production! 🚀
@@ -591,7 +623,7 @@ Swift Compiler Error (Xcode): 'SubscriptionPeriod' is ambiguous for type lookup 
 - **Version**: purchases_flutter ^9.9.4
 
 ### iOS Configuration
-- **Bundle ID**: `com.pinkflag.safetyapp`
+- **Bundle ID**: `com.pinkflag.app`
 - **Deployment Target**: iOS 13.0
 - **Xcode Version**: 16.3
 - **iOS Version**: 18.4

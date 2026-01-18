@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../services/revenuecat_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -73,16 +74,42 @@ class _SplashScreenState extends State<SplashScreen>
       if (kDebugMode) {
         print('✅ [SPLASH] User authenticated: ${currentUser.id}');
         print('✅ [SPLASH] Email: ${currentUser.email}');
+      }
+
+      // CRITICAL: Initialize RevenueCat for existing session
+      // Without this, purchases are attributed to anonymous/wrong user
+      // See: RevenueCat purchase attribution fix (Jan 2026)
+      try {
+        if (kDebugMode) {
+          print('🛒 [SPLASH] Initializing RevenueCat for existing session...');
+        }
+        await RevenueCatService().initialize(currentUser.id);
+        if (kDebugMode) {
+          print('✅ [SPLASH] RevenueCat initialized with user: ${currentUser.id}');
+        }
+      } catch (e) {
+        // Don't block navigation if RC init fails - user can still use app
+        // Purchases may not work correctly but app remains functional
+        if (kDebugMode) {
+          print('⚠️ [SPLASH] RevenueCat init failed: $e');
+        }
+      }
+
+      if (kDebugMode) {
         print('✅ [SPLASH] Navigating to home screen');
       }
-      Navigator.of(context).pushReplacementNamed('/home');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     } else {
       // No user authenticated → show onboarding flow
       if (kDebugMode) {
         print('ℹ️ [SPLASH] No user authenticated');
         print('ℹ️ [SPLASH] Navigating to onboarding');
       }
-      Navigator.of(context).pushReplacementNamed('/onboarding');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/onboarding');
+      }
     }
   }
 

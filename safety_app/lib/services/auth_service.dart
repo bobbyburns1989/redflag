@@ -234,8 +234,31 @@ class AuthService {
   }
 
   /// Sign out
+  ///
+  /// Signs out from both Supabase and RevenueCat.
+  /// RevenueCat logout ensures the next user's purchases are attributed correctly.
   Future<void> signOut() async {
+    if (kDebugMode) {
+      print('🔐 [AUTH] Signing out user: ${currentUser?.id}');
+    }
+
+    // Log out from RevenueCat first (resets to anonymous user)
+    // This prevents purchase mis-attribution if a different user logs in
+    try {
+      await RevenueCatService().logOut();
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ [AUTH] RevenueCat logout error (continuing): $e');
+      }
+      // Don't block sign out if RC logout fails
+    }
+
+    // Sign out from Supabase
     await _supabase.auth.signOut();
+
+    if (kDebugMode) {
+      print('✅ [AUTH] Sign out complete');
+    }
   }
 
   /// Get current user

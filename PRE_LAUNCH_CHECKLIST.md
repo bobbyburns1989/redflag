@@ -289,7 +289,7 @@
 #### App Information
 - [ ] **App Name**: "Pink Flag" (exact, must be available)
 - [ ] **Subtitle**: "Stay Safe, Stay Aware" (30 characters max)
-- [ ] **Bundle ID**: `com.pinkflag.safetyapp` (matches Xcode)
+- [ ] **Bundle ID**: `com.pinkflag.app` (matches Xcode)
 - [ ] **SKU**: Unique identifier for your app
 - [ ] **Primary Language**: English (U.S.)
 - [ ] **Category**:

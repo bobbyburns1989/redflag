@@ -1,31 +1,147 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 /// RevenueCat service for managing in-app purchases
+///
+/// CRITICAL: This service handles user identity for purchase attribution.
+/// - Always call initialize() on app start with the current user ID
+/// - Call logIn() when user signs in
+/// - Call logOut() when user signs out
+///
+/// Without proper user identification, purchases are attributed to
+/// anonymous/wrong users and won't appear in RevenueCat dashboard.
 class RevenueCatService {
   static final RevenueCatService _instance = RevenueCatService._internal();
   factory RevenueCatService() => _instance;
   RevenueCatService._internal();
 
-  bool _isInitialized = false;
+  bool _isConfigured = false;
+  String? _currentUserId;
 
-  /// Initialize RevenueCat with user ID
+  /// Initialize or re-identify RevenueCat with user ID
+  ///
+  /// This method handles both initial configuration and user identity changes.
+  /// - First call: Configures RevenueCat SDK with user ID
+  /// - Subsequent calls: Uses logIn() to update user identity
+  ///
+  /// Always call this on app start for existing sessions and after sign-in.
   Future<void> initialize(String userId) async {
-    if (_isInitialized) return;
+    if (kDebugMode) {
+      print('🛒 [RC] initialize called with userId: $userId');
+      print('🛒 [RC] Current state: configured=$_isConfigured, currentUser=$_currentUserId');
+    }
+
+    // If already configured with same user, skip
+    if (_isConfigured && _currentUserId == userId) {
+      if (kDebugMode) {
+        print('🛒 [RC] Already configured with same user, skipping');
+      }
+      return;
+    }
 
     try {
-      // Configure RevenueCat
-      await Purchases.configure(
-        PurchasesConfiguration('appl_IRhHyHobKGcoteGnlLRWUFgnIos')
-          ..appUserID = userId,
-      );
-
-      _isInitialized = true;
+      if (!_isConfigured) {
+        // First-time configuration
+        if (kDebugMode) {
+          print('🛒 [RC] First-time configuration with user: $userId');
+        }
+        await Purchases.configure(
+          PurchasesConfiguration('appl_IRhHyHobKGcoteGnlLRWUFgnIos')
+            ..appUserID = userId,
+        );
+        _isConfigured = true;
+        _currentUserId = userId;
+        if (kDebugMode) {
+          print('✅ [RC] Configured successfully');
+        }
+      } else {
+        // Already configured but different user - use logIn to switch
+        if (kDebugMode) {
+          print('🛒 [RC] Switching user from $_currentUserId to $userId');
+        }
+        await logIn(userId);
+      }
     } catch (e) {
-      // Error initializing RevenueCat
+      if (kDebugMode) {
+        print('❌ [RC] Error in initialize: $e');
+      }
       rethrow;
     }
   }
+
+  /// Log in a user to RevenueCat
+  ///
+  /// Call this when a user signs in to ensure purchases are attributed correctly.
+  /// This updates the user identity in RevenueCat without re-configuring the SDK.
+  Future<void> logIn(String userId) async {
+    if (!_isConfigured) {
+      if (kDebugMode) {
+        print('⚠️ [RC] logIn called but SDK not configured, calling initialize');
+      }
+      await initialize(userId);
+      return;
+    }
+
+    if (_currentUserId == userId) {
+      if (kDebugMode) {
+        print('🛒 [RC] logIn called with same user, skipping');
+      }
+      return;
+    }
+
+    try {
+      if (kDebugMode) {
+        print('🛒 [RC] Logging in user: $userId');
+      }
+      final result = await Purchases.logIn(userId);
+      _currentUserId = userId;
+      if (kDebugMode) {
+        print('✅ [RC] User logged in successfully');
+        print('🛒 [RC] CustomerInfo: ${result.customerInfo.originalAppUserId}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ [RC] Error in logIn: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Log out the current user from RevenueCat
+  ///
+  /// Call this when a user signs out. This resets to an anonymous user.
+  /// The next sign-in should call logIn() to identify the new user.
+  Future<void> logOut() async {
+    if (!_isConfigured) {
+      if (kDebugMode) {
+        print('⚠️ [RC] logOut called but SDK not configured, skipping');
+      }
+      return;
+    }
+
+    try {
+      if (kDebugMode) {
+        print('🛒 [RC] Logging out user: $_currentUserId');
+      }
+      await Purchases.logOut();
+      _currentUserId = null;
+      if (kDebugMode) {
+        print('✅ [RC] User logged out successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ [RC] Error in logOut: $e');
+      }
+      // Don't rethrow - logout errors shouldn't block sign-out flow
+    }
+  }
+
+  /// Get the currently identified user ID
+  String? get currentUserId => _currentUserId;
+
+  /// Check if RevenueCat is configured
+  bool get isConfigured => _isConfigured;
 
   /// Get available offerings (products to purchase)
   Future<Offerings?> getOfferings() async {

@@ -130,20 +130,27 @@ serve(async (req) => {
     }
 
     // Determine credits and price based on product ID
+    // UPDATED: v1.2.0 variable credit system uses 10x multiplier
+    // - Name search costs 10 credits ($0.20 via Offenders.io)
+    // - Phone search costs 2 credits ($0.018 via Twilio)
+    // - Image search costs 4 credits ($0.04 via TinEye)
     let creditsToAdd = 0
     let expectedPrice = 0.0
 
     switch (productId) {
       case 'pink_flag_3_searches':
-        creditsToAdd = 3
+        // Was 3 credits, now 30 credits (10x for variable costs)
+        creditsToAdd = 30
         expectedPrice = 1.99
         break
       case 'pink_flag_10_searches':
-        creditsToAdd = 10
+        // Was 10 credits, now 100 credits (10x for variable costs)
+        creditsToAdd = 100
         expectedPrice = 4.99
         break
       case 'pink_flag_25_searches':
-        creditsToAdd = 25
+        // Was 25 credits, now 250 credits (10x for variable costs)
+        creditsToAdd = 250
         expectedPrice = 9.99
         break
       default:

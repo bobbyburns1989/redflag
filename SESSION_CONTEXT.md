@@ -24,7 +24,7 @@
 
 ### Key Metrics
 - **iOS Target**: iOS 13.0+
-- **Bundle ID**: com.pinkflag.safetyapp
+- **Bundle ID**: com.pinkflag.app
 - **Current Version**: 1.1.8+14
 - **Build Environment**: Xcode 16.3, macOS 15.6.1
 

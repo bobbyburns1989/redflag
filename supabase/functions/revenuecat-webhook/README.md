@@ -67,11 +67,18 @@ curl -X POST https://qjbtmrbbjivniveptdjl.supabase.co/functions/v1/revenuecat-we
 
 ## Product ID Mapping
 
-| Product ID | Credits | Price |
-|-----------|---------|-------|
-| `pink_flag_3_searches` | 3 | $1.99 |
-| `pink_flag_10_searches` | 10 | $4.99 |
-| `pink_flag_25_searches` | 25 | $9.99 |
+**Updated for v1.2.0 Variable Credit System (10x multiplier)**
+
+| Product ID | Credits | Price | Notes |
+|-----------|---------|-------|-------|
+| `pink_flag_3_searches` | 30 | $1.99 | 3-15 searches depending on type |
+| `pink_flag_10_searches` | 100 | $4.99 | Best value |
+| `pink_flag_25_searches` | 250 | $9.99 | Power users |
+
+**Credit Costs by Search Type:**
+- Name Search: 10 credits ($0.20 via Offenders.io)
+- Phone Search: 2 credits ($0.018 via Twilio)
+- Image Search: 4 credits ($0.04 via TinEye)
 
 ## Error Handling
 

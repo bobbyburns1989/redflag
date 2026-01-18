@@ -1,8 +1,8 @@
 # AI Coding Context - Pink Flag
 
 > **Purpose**: Optimized documentation for AI coding assistants
-> **Last Updated**: December 1, 2025
-> **Version**: 1.1.11+17
+> **Last Updated**: January 14, 2026
+> **Version**: 1.2.3+26
 > **Critical**: Read this FIRST before making any code changes
 
 ---
@@ -396,7 +396,23 @@ $$;
 
 ## 📝 Version History
 
-### v1.1.11 (Dec 1, 2025) - **CURRENT**
+### v1.2.3 (Jan 14, 2026) - **CURRENT**
+**🔧 Critical Fix: RevenueCat Purchase Attribution**
+- ✅ Fixed: RC now initialized for existing sessions in splash_screen.dart
+- ✅ Fixed: Added logIn/logOut methods to revenuecat_service.dart
+- ✅ Fixed: auth_service.dart now calls RC logOut on sign out
+- ✅ Fixed: Webhook credit values updated to 30/100/250 (10x system)
+- ✅ Fixed: Bundle ID references corrected to com.pinkflag.app
+
+**Files Modified**:
+- `safety_app/lib/screens/splash_screen.dart`
+- `safety_app/lib/services/revenuecat_service.dart`
+- `safety_app/lib/services/auth_service.dart`
+- `supabase/functions/revenuecat-webhook/index.ts`
+
+**Migration**: Deploy webhook after app update
+
+### v1.1.11 (Dec 1, 2025)
 **🐛 Critical Bug Fix: Double Credit Deduction in Image Search**
 - ✅ Removed client-side credit deduction from image search
 - ✅ Backend is now single source of truth for ALL search types
