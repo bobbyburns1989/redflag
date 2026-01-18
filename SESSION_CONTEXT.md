@@ -218,8 +218,8 @@ schemas/
 
 ### Technical Debt (Post-Launch)
 - [x] Refactor resources_screen.dart (505 → 177 lines) ✅ COMPLETE
-- [ ] Add widget tests for extracted search components
-- [ ] Add widget tests for extracted resources components
+- [x] Add widget tests for extracted search components (17 tests) ✅ COMPLETE
+- [x] Add widget tests for extracted resources components (19 tests) ✅ COMPLETE
 - [ ] Add integration tests for credit refund system
 - [ ] Monitor production performance and optimize as needed
 - [ ] Update database password (if not already done)
