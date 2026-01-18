@@ -32,10 +32,10 @@
 **Verification Checklist**:
 - [x] Code complete and committed (commit a8c79fa)
 - [x] Tested and working as expected
-- [ ] Deploy webhook: `supabase functions deploy revenuecat-webhook`
+- [x] Webhook deployed to Supabase (January 18, 2026)
 - [ ] Verify purchase appears in RevenueCat Dashboard under correct user ID
 
-**Status**: ✅ Code complete and tested, webhook deployment pending
+**Status**: ✅ Code complete, tested, and webhook deployed
 
 ---
 
