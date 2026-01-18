@@ -152,6 +152,18 @@ schemas/
 
 ## 🔄 Recent Changes (Last 7 Days)
 
+### January 18, 2026 - Search Screen Aesthetic Improvements (v1.2.9)
+**What**: Major visual overhaul of the home/search screen
+**Why**: Improve brand presence and user experience
+**Impact**:
+- 🎨 Gradient AppBar with pink theme
+- 👋 Time-based welcome header ("Good morning/afternoon/evening")
+- 🃏 Visual search mode cards (replacing basic tab bar)
+- 🌈 Subtle background gradient
+- ✨ Smooth form transition animations (AnimatedSwitcher)
+- ♿ Accessibility: reduced motion support, proper Semantics
+**Files**: search_screen.dart, welcome_header.dart (new), search_mode_selector.dart (new), credit_badge.dart
+
 ### January 18, 2026 - RevenueCat Purchase Attribution Fix
 **What**: Fixed purchases not appearing in RevenueCat Dashboard
 **Why**: User identity wasn't being set for existing sessions
