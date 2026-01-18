@@ -1,8 +1,8 @@
 # AI Coding Context - Pink Flag
 
 > **Purpose**: Optimized documentation for AI coding assistants
-> **Last Updated**: January 14, 2026
-> **Version**: 1.2.3+26
+> **Last Updated**: January 18, 2026
+> **Version**: 1.2.8+30
 > **Critical**: Read this FIRST before making any code changes
 
 ---
@@ -396,7 +396,7 @@ $$;
 
 ## 📝 Version History
 
-### v1.2.3 (Jan 14, 2026) - **CURRENT**
+### v1.2.8 (Jan 18, 2026) - **CURRENT**
 **🔧 Critical Fix: RevenueCat Purchase Attribution**
 - ✅ Fixed: RC now initialized for existing sessions in splash_screen.dart
 - ✅ Fixed: Added logIn/logOut methods to revenuecat_service.dart

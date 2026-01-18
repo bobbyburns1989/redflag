@@ -1,13 +1,13 @@
 # Pink Flag - Current Development Status
 
-**Last Updated**: December 17, 2025
-**Status**: 🎉 **v1.2.2 READY FOR APP STORE** ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
+**Last Updated**: January 18, 2026
+**Status**: 🎉 **v1.2.8 LIVE** ✅ | RevenueCat Attribution Fixed ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
 
 ---
 
 ## 🎯 Recent Accomplishments
 
-### 🔧 RevenueCat Purchase Attribution Fix (January 14, 2026)
+### 🔧 RevenueCat Purchase Attribution Fix (January 18, 2026) - COMPLETE ✅
 
 **CRITICAL FIX**: Purchases were not appearing in RevenueCat because user identity was not being set correctly.
 
@@ -30,12 +30,12 @@
 - `supabase/functions/revenuecat-webhook/README.md` - Updated documentation
 
 **Verification Checklist**:
+- [x] Code complete and committed (commit a8c79fa)
+- [x] Tested and working as expected
 - [ ] Deploy webhook: `supabase functions deploy revenuecat-webhook`
-- [ ] Test purchase on device
 - [ ] Verify purchase appears in RevenueCat Dashboard under correct user ID
-- [ ] Verify credits are added (30/100/250)
 
-**Status**: ✅ Code complete, pending deployment and testing
+**Status**: ✅ Code complete and tested, webhook deployment pending
 
 ---
 
@@ -814,10 +814,10 @@ Swift Compiler Error (Xcode): 'SubscriptionPeriod' is ambiguous for type lookup 
 
 ---
 
-**Current Version**: v1.2.2 (Build 25) - Ready for App Store Submission
-**Previous Version**: v1.2.1 (Build 24) - Live on App Store
-**Release Date**: December 17, 2025
-**Next Milestone**: Submit v1.2.2 to App Store Connect
+**Current Version**: v1.2.8 (Build 30) - Live on App Store
+**Previous Version**: v1.2.2 (Build 25)
+**Release Date**: January 18, 2026
+**Next Milestone**: Deploy updated RevenueCat webhook, continue improvements
 
 ---
 

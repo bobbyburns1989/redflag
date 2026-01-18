@@ -1,8 +1,8 @@
 # Pink Flag - Session Context Guide
 
 **Purpose**: Quick AI onboarding for Claude Code sessions (< 2 min read)
-**Last Updated**: November 29, 2025
-**Version**: 1.1.8 (Build 14)
+**Last Updated**: January 18, 2026
+**Version**: 1.2.8 (Build 30)
 
 ---
 
@@ -11,7 +11,7 @@
 **App Name**: Pink Flag
 **Tagline**: "Stay Safe, Stay Aware"
 **Platform**: iOS only (Flutter)
-**Status**: 🎉 **LIVE ON APP STORE** (v1.1.8)
+**Status**: 🎉 **LIVE ON APP STORE** (v1.2.8)
 **Code Quality**: 0 errors, 0 warnings
 
 ### Tech Stack
@@ -25,7 +25,7 @@
 ### Key Metrics
 - **iOS Target**: iOS 13.0+
 - **Bundle ID**: com.pinkflag.app
-- **Current Version**: 1.1.8+14
+- **Current Version**: 1.2.8+30
 - **Build Environment**: Xcode 16.3, macOS 15.6.1
 
 ---
@@ -151,6 +151,16 @@ schemas/
 ---
 
 ## 🔄 Recent Changes (Last 7 Days)
+
+### January 18, 2026 - RevenueCat Purchase Attribution Fix
+**What**: Fixed purchases not appearing in RevenueCat Dashboard
+**Why**: User identity wasn't being set for existing sessions
+**Impact**:
+- 🔧 RevenueCat now initialized for existing sessions in splash_screen.dart
+- 🔧 Added logIn/logOut methods to revenuecat_service.dart
+- 🔧 auth_service.dart now calls RC logOut on sign out
+- 🔧 Webhook credit values updated to 30/100/250 (v1.2.0 system)
+**Files**: splash_screen.dart, revenuecat_service.dart, auth_service.dart, webhook index.ts
 
 ### November 29, 2025 - Search Screen Refactoring
 **What**: Extracted 6 widgets from monolithic search_screen.dart
