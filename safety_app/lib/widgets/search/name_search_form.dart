@@ -26,6 +26,7 @@ class NameSearchForm extends StatelessWidget {
   final VoidCallback onClear;
   final String? errorMessage;
   final bool isLoading;
+  final bool showClearButton;
 
   const NameSearchForm({
     super.key,
@@ -41,6 +42,7 @@ class NameSearchForm extends StatelessWidget {
     required this.onClear,
     required this.errorMessage,
     required this.isLoading,
+    this.showClearButton = false,
   });
 
   @override
@@ -48,50 +50,47 @@ class NameSearchForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Disclaimer banner
+        // Disclaimer banner (compact)
         Container(
           decoration: BoxDecoration(
             color: AppColors.palePink,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
               Icon(
                 Icons.info_outline_rounded,
                 color: AppColors.primaryPink,
-                size: 16,
+                size: 13,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Results are potential matches. Verify independently.',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.mediumText,
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 10,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
 
-        // Required Fields Section
+        // Required Fields Section (compact)
         Text(
           'Required',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
             color: AppColors.mediumText,
             letterSpacing: 0.3,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
 
         // First name field (required)
         CustomTextField(
@@ -111,7 +110,7 @@ class NameSearchForm extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
 
         // Last name field (required)
         CustomTextField(
@@ -131,39 +130,36 @@ class NameSearchForm extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 6),
 
-        // Optional Filters Section - polished styling
+        // Optional Filters Section (compact)
         Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            childrenPadding: const EdgeInsets.only(top: 8),
+            childrenPadding: const EdgeInsets.only(top: 6),
             title: Row(
               children: [
                 Text(
                   'Optional Filters',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.mediumText,
                     letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppColors.lightPink,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '4',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primaryPink,
                     ),
@@ -177,6 +173,7 @@ class NameSearchForm extends StatelessWidget {
               child: Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.mediumText,
+                size: 20,
               ),
             ),
             initiallyExpanded: showOptionalFilters,
@@ -207,7 +204,7 @@ class NameSearchForm extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: CustomTextField(
                           controller: stateController,
@@ -233,7 +230,7 @@ class NameSearchForm extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   // Row 2: Phone + ZIP
                   Row(
@@ -258,7 +255,7 @@ class NameSearchForm extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: CustomTextField(
                           controller: zipCodeController,
@@ -288,11 +285,11 @@ class NameSearchForm extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
 
         SearchErrorBanner(errorMessage: errorMessage),
 
-        // Search button - prominent
+        // Search button
         CustomButton(
           text: 'Search Registry',
           onPressed: onSearch,
@@ -301,16 +298,17 @@ class NameSearchForm extends StatelessWidget {
           icon: Icons.search_rounded,
           isLoading: isLoading,
         ),
-        const SizedBox(height: 12),
 
-        // Clear button - subtle
-        CustomButton(
-          text: 'Clear Form',
-          onPressed: isLoading ? null : onClear,
-          variant: ButtonVariant.text,
-          size: ButtonSize.medium,
-          icon: Icons.refresh_rounded,
-        ),
+        // Clear button - only show when form has content
+        if (showClearButton) ...[
+          const SizedBox(height: 8),
+          CustomButton(
+            text: 'Clear',
+            onPressed: isLoading ? null : onClear,
+            variant: ButtonVariant.text,
+            size: ButtonSize.small,
+          ),
+        ],
       ],
     );
   }

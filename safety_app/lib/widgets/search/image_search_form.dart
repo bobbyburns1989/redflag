@@ -24,6 +24,7 @@ class ImageSearchForm extends StatelessWidget {
   final VoidCallback onSearch;
   final String? errorMessage;
   final bool isLoading;
+  final bool showClearButton;
 
   const ImageSearchForm({
     super.key,
@@ -35,6 +36,7 @@ class ImageSearchForm extends StatelessWidget {
     required this.onSearch,
     required this.errorMessage,
     required this.isLoading,
+    this.showClearButton = false,
   });
 
   @override
@@ -42,66 +44,63 @@ class ImageSearchForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Info banner
+        // Info banner (compact)
         Container(
           decoration: BoxDecoration(
             color: AppColors.palePink,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
               Icon(
                 Icons.info_outline_rounded,
                 color: AppColors.primaryPink,
-                size: 16,
+                size: 13,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Check if an image appears elsewhere online',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.mediumText,
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 10,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
 
-        // Image selection buttons
+        // Image selection buttons (compact)
         Row(
           children: [
             Expanded(
               child: GestureDetector(
                 onTap: isLoading ? null : onPickFromGallery,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.palePink,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.softPink),
                   ),
                   child: Column(
                     children: [
                       Icon(
                         Icons.photo_library_outlined,
-                        size: 28,
+                        size: 20,
                         color: AppColors.primaryPink,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 3),
                       Text(
                         'Gallery',
                         style: TextStyle(
                           color: AppColors.darkText,
                           fontWeight: FontWeight.w500,
-                          fontSize: 13,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -109,31 +108,31 @@ class ImageSearchForm extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
               child: GestureDetector(
                 onTap: isLoading ? null : onTakePhoto,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.palePink,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.softPink),
                   ),
                   child: Column(
                     children: [
                       Icon(
                         Icons.camera_alt_outlined,
-                        size: 28,
+                        size: 20,
                         color: AppColors.primaryPink,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 3),
                       Text(
                         'Camera',
                         style: TextStyle(
                           color: AppColors.darkText,
                           fontWeight: FontWeight.w500,
-                          fontSize: 13,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -143,16 +142,16 @@ class ImageSearchForm extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        // Selected image preview
+        // Selected image preview (compact)
         if (selectedImage != null) ...[
           Stack(
             children: [
               Container(
-                height: 180,
+                height: 100,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   image: DecorationImage(
                     image: FileImage(selectedImage!),
                     fit: BoxFit.cover,
@@ -160,59 +159,45 @@ class ImageSearchForm extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 8,
-                right: 8,
+                top: 4,
+                right: 4,
                 child: GestureDetector(
                   onTap: onClearImage,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 14),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ],
 
         // OR divider and URL input (only if no image selected)
         if (selectedImage == null) ...[
           Row(
             children: [
-              Expanded(
-                child: Container(
-                  height: 1,
-                  color: AppColors.softPink,
-                ),
-              ),
+              Expanded(child: Container(height: 1, color: AppColors.softPink)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Text(
                   'OR',
                   style: TextStyle(
                     color: AppColors.mediumText,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  height: 1,
-                  color: AppColors.softPink,
-                ),
-              ),
+              Expanded(child: Container(height: 1, color: AppColors.softPink)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           CustomTextField(
             controller: urlController,
@@ -222,7 +207,7 @@ class ImageSearchForm extends StatelessWidget {
             keyboardType: TextInputType.url,
             showClearButton: true,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
         ],
 
         SearchErrorBanner(errorMessage: errorMessage),
@@ -236,16 +221,17 @@ class ImageSearchForm extends StatelessWidget {
           icon: Icons.image_search,
           isLoading: isLoading,
         ),
-        const SizedBox(height: 12),
 
-        // Clear button
-        CustomButton(
-          text: 'Clear',
-          onPressed: isLoading ? null : onClearImage,
-          variant: ButtonVariant.text,
-          size: ButtonSize.medium,
-          icon: Icons.refresh_rounded,
-        ),
+        // Clear button - only show when form has content
+        if (showClearButton) ...[
+          const SizedBox(height: 8),
+          CustomButton(
+            text: 'Clear',
+            onPressed: isLoading ? null : onClearImage,
+            variant: ButtonVariant.text,
+            size: ButtonSize.small,
+          ),
+        ],
       ],
     );
   }

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-/// Visual card-based selector for switching between search modes.
+/// Compact card-based selector for switching between search modes.
 ///
-/// Replaces the simple tab bar with larger, more visual cards showing:
+/// Displays 3 mode cards in a row showing:
 /// - Icon for each search type
-/// - Title and brief description
+/// - Title
 /// - Credit cost badge
 ///
 /// Features:
-/// - Horizontal scroll for narrow screens
+/// - Flexible width cards that fill available space (no scrolling)
 /// - Material + InkWell for proper tap feedback
 /// - Semantics for accessibility
 /// - Animated selection state
@@ -26,38 +26,38 @@ class SearchModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildModeCard(
+    return Row(
+      children: [
+        Expanded(
+          child: _buildModeCard(
             context: context,
             mode: 0,
             icon: Icons.person_search,
             title: 'Name',
-            subtitle: 'Search by name',
             credits: 10,
           ),
-          const SizedBox(width: 12),
-          _buildModeCard(
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildModeCard(
             context: context,
             mode: 1,
             icon: Icons.phone,
             title: 'Phone',
-            subtitle: 'Lookup number',
             credits: 2,
           ),
-          const SizedBox(width: 12),
-          _buildModeCard(
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildModeCard(
             context: context,
             mode: 2,
             icon: Icons.image_search,
             title: 'Image',
-            subtitle: 'Reverse search',
             credits: 4,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -66,7 +66,6 @@ class SearchModeSelector extends StatelessWidget {
     required int mode,
     required IconData icon,
     required String title,
-    required String subtitle,
     required int credits,
   }) {
     final isSelected = selectedMode == mode;
@@ -79,31 +78,32 @@ class SearchModeSelector extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => onModeChanged(mode),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            width: 100,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.lightPink : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected ? AppColors.primaryPink : AppColors.softPink,
-                width: isSelected ? 2 : 1,
+                width: isSelected ? 2.5 : 1,
               ),
               boxShadow: isSelected
                   ? [
+                      // Stronger glow effect for selected state
                       BoxShadow(
-                        color: AppColors.primaryPink.withValues(alpha: 0.2),
+                        color: AppColors.primaryPink.withValues(alpha: 0.25),
                         blurRadius: 12,
+                        spreadRadius: 1,
                         offset: const Offset(0, 4),
                       ),
                     ]
                   : [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
+                        blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -111,10 +111,10 @@ class SearchModeSelector extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon with animated color
+                // Icon with animated color (compact)
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primaryPink.withValues(alpha: 0.15)
@@ -123,13 +123,13 @@ class SearchModeSelector extends StatelessWidget {
                   ),
                   child: Icon(
                     icon,
-                    size: 24,
+                    size: 20,
                     color: isSelected
                         ? AppColors.primaryPink
                         : AppColors.mediumText,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
 
                 // Title
                 Text(
@@ -138,33 +138,22 @@ class SearchModeSelector extends StatelessWidget {
                     color: isSelected
                         ? AppColors.primaryPink
                         : AppColors.darkText,
-                    fontSize: 14,
+                    fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 2),
-
-                // Subtitle
-                Text(
-                  subtitle,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.mediumText,
-                    fontSize: 10,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
 
                 // Credit cost badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
+                    horizontal: 6,
+                    vertical: 2,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primaryPink.withValues(alpha: 0.1)
                         : AppColors.palePink,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '$credits cr',

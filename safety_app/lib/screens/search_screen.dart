@@ -446,6 +446,22 @@ class _SearchScreenState extends State<SearchScreen> {
     showOutOfCreditsDialog(context, currentCredits);
   }
 
+  /// Checks if the name search form has any content.
+  bool get _isNameFormDirty =>
+      _firstNameController.text.isNotEmpty ||
+      _lastNameController.text.isNotEmpty ||
+      _ageController.text.isNotEmpty ||
+      _stateController.text.isNotEmpty ||
+      _phoneController.text.isNotEmpty ||
+      _zipCodeController.text.isNotEmpty;
+
+  /// Checks if the phone search form has any content.
+  bool get _isPhoneFormDirty => _phoneNumberController.text.isNotEmpty;
+
+  /// Checks if the image search form has any content.
+  bool get _isImageFormDirty =>
+      _selectedImage != null || _urlController.text.isNotEmpty;
+
   /// Builds the current search form based on selected mode.
   /// Uses ValueKey to trigger AnimatedSwitcher transitions.
   Widget _buildCurrentForm() {
@@ -467,6 +483,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onClear: _clearForm,
           errorMessage: _errorMessage,
           isLoading: _isLoading,
+          showClearButton: _isNameFormDirty,
         );
       case 1:
         return PhoneSearchForm(
@@ -476,6 +493,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onClear: _clearPhoneForm,
           errorMessage: _errorMessage,
           isLoading: _isLoading,
+          showClearButton: _isPhoneFormDirty,
         );
       case 2:
       default:
@@ -489,6 +507,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onSearch: _performImageSearch,
           errorMessage: _errorMessage,
           isLoading: _isLoading,
+          showClearButton: _isImageFormDirty,
         );
     }
   }
@@ -508,18 +527,13 @@ class _SearchScreenState extends State<SearchScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             systemOverlayStyle: SystemUiOverlayStyle.light,
+            toolbarHeight: 50,
             title: Text(
               'Search Registry',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                fontSize: 18,
               ),
             ),
             flexibleSpace: Container(
@@ -530,79 +544,69 @@ class _SearchScreenState extends State<SearchScreen> {
             foregroundColor: Colors.white,
             actions: [CreditBadge.onDark(credits: _currentCredits)],
           ),
-          body: SingleChildScrollView(
+          body: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const WelcomeHeader(),
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.white, AppColors.softWhite],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.softPink.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SearchModeSelector(
-                            selectedMode: _searchMode,
-                            onModeChanged: (mode) =>
-                                setState(() => _searchMode = mode),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Animated form switching with smooth transitions
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOutCubic,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                // Respect reduced motion setting
-                                if (MediaQuery.of(context).disableAnimations) {
-                                  return child;
-                                }
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0.03, 0),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: _buildCurrentForm(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, AppColors.softWhite],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.softPink.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const WelcomeHeader(),
+                      SearchModeSelector(
+                        selectedMode: _searchMode,
+                        onModeChanged: (mode) =>
+                            setState(() => _searchMode = mode),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Animated form switching with smooth transitions
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) {
+                            // Respect reduced motion setting
+                            if (MediaQuery.of(context).disableAnimations) {
+                              return child;
+                            }
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                          child: SingleChildScrollView(
+                            key: ValueKey<int>(_searchMode),
+                            child: _buildCurrentForm(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
