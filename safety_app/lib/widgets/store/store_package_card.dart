@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/purchase_package.dart';
-import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/loading_widgets.dart';
+import '../../models/purchase_package.dart';
+import '../../theme/app_colors.dart';
+import '../custom_button.dart';
+import '../loading_widgets.dart';
 
 /// Reusable widget for displaying purchase packages in the store
 /// Handles both RevenueCat packages and mock packages with a unified interface

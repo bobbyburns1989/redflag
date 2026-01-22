@@ -1,11 +1,84 @@
 # Pink Flag - Current Development Status
 
-**Last Updated**: January 18, 2026
-**Status**: 🎉 **v1.2.8 LIVE** ✅ | RevenueCat Attribution Fixed ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
+**Last Updated**: January 22, 2026
+**Status**: 🎉 **v1.2.8 LIVE** ✅ | Store Screen Refactored ✅ | RevenueCat Attribution Fixed ✅ | Variable Credit System v1.2.0 DEPLOYED ✅ | Backend v18 Deployed ✅ | RevenueCat ACTIVE ✅ | Phone Lookup COMPLETE ✅ | Credit Refund System v1.1.7 COMPLETE ✅ | Apple-Only Auth IMPLEMENTED ✅ | Production Ready ✅
 
 ---
 
 ## 🎯 Recent Accomplishments
+
+### 🎨 Store Screen Refactoring (January 22, 2026) - COMPLETE ✅
+
+Successfully refactored the monolithic store screen into a clean, maintainable widget-based architecture! 🎉
+
+**Problem Solved**: The `store_screen.dart` file had grown to 768 lines with 256 lines of duplicate code (33% duplication) between mock and real purchase package cards, making it difficult to maintain and update.
+
+**Solution Implemented**: Systematic widget extraction following a 7-phase plan, creating 5 reusable widgets with zero code duplication.
+
+**Implementation Details**:
+1. ✅ Created `lib/widgets/store/` directory structure
+2. ✅ Extracted CreditsBalanceHeader widget (66 lines) - Credit balance display
+3. ✅ Unified StorePackageCard widget (160 lines) - Single card for both mock and real packages
+4. ✅ Extracted PurchaseDelayedDialog widget (87 lines) - Webhook timeout dialog
+5. ✅ Extracted MockPurchaseDialog widget (85 lines) - Mock purchase confirmation
+6. ✅ Extracted NoOfferingsMessage widget (122 lines) - Empty state UI
+7. ✅ Refactored main screen with extracted widgets
+8. ✅ Fixed import paths for store subdirectory
+9. ✅ Verified with flutter analyze (0 errors, 41 info-level lints)
+
+**Metrics**:
+- **Before**: 768 lines (256 lines duplication, 33%)
+- **After**: 353 lines (0 lines duplication, 0%)
+- **Reduction**: 415 lines removed from main file (54% decrease)
+- **Widgets Created**: 5 new reusable widgets (515 total lines across all widgets)
+- **Net Change**: +100 lines total (distributed across 6 files instead of 1)
+- **Code Quality**: 0 errors, 0 warnings (dart analyze)
+- **Largest Method**: 73 lines (was 134 lines)
+
+**Architecture Improvements**:
+- ✅ Eliminated 100% Code Duplication - Single source of truth for package cards
+- ✅ Improved Testability - Each widget independently testable
+- ✅ Better Maintainability - Changes isolated to specific widgets
+- ✅ Followed Established Patterns - Matches search_screen and resources_screen refactoring style
+- ✅ Single Responsibility - Each widget has one clear purpose
+
+**Key Achievement**: Unified package card widget that works seamlessly with both mock purchases (development) and RevenueCat purchases (production) using `PurchasePackage` model with factory constructors.
+
+**Files Created**:
+- `lib/widgets/store/credits_balance_header.dart` (65 lines)
+- `lib/widgets/store/store_package_card.dart` (159 lines)
+- `lib/widgets/store/no_offerings_message.dart` (121 lines)
+- `lib/widgets/store/purchase_delayed_dialog.dart` (86 lines)
+- `lib/widgets/store/mock_purchase_dialog.dart` (84 lines)
+- `STORE_SCREEN_REFACTORING_PLAN.md` (975 lines - comprehensive plan with actual results)
+
+**Files Modified**:
+- `lib/screens/store_screen.dart` (768 → 353 lines, -54%)
+- `lib/widgets/store/store_package_card.dart` (import path fixes)
+
+**Benefits**:
+- 🚀 **Faster Navigation**: Find code faster (6 focused files vs 1 large file)
+- 🧪 **Easier Testing**: Widgets can be tested independently
+- 🔄 **Better Maintainability**: Changes to package cards happen in one place
+- ♻️ **Reusability**: Widgets usable in other screens (e.g., Settings)
+- 📦 **Cleaner Architecture**: Follows project patterns from search/resources screens
+
+**Next Steps**:
+1. ⏳ Phase 7 (Optional): Extract PurchaseHandler service for webhook polling logic
+2. ⏳ Testing: Add widget tests for all 5 new components
+3. ⏳ Integration Testing: Verify mock and real purchase flows end-to-end
+
+**RevenueCat Product Name Updates** (January 22, 2026):
+- ✅ Updated product display names in RevenueCat Dashboard to reflect credit amounts
+- ⏳ Update product names in App Store Connect (30 Credits, 100 Credits, 250 Credits)
+- Note: Product IDs remain unchanged (`pink_flag_3_searches`, etc.) - only display names updated
+- Changes to App Store Connect product metadata go live immediately (no app resubmission needed)
+
+**Status**: ✅ **Phases 1-6 Complete** | ⏳ Testing Pending | ⏳ Phase 7 Optional
+
+**Documentation**: See `STORE_SCREEN_REFACTORING_PLAN.md` for complete implementation details and metrics
+
+---
 
 ### 🔧 RevenueCat Purchase Attribution Fix (January 18, 2026) - COMPLETE ✅
 

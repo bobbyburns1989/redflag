@@ -5,32 +5,34 @@ import '../services/revenuecat_service.dart';
 import '../services/auth_service.dart';
 import '../config/app_config.dart';
 import '../theme/app_colors.dart';
-import '../widgets/custom_button.dart';
+import '../models/purchase_package.dart';
 import '../widgets/loading_widgets.dart';
 import '../widgets/custom_snackbar.dart';
+import '../widgets/store/credits_balance_header.dart';
+import '../widgets/store/store_package_card.dart';
+import '../widgets/store/purchase_delayed_dialog.dart';
+import '../widgets/store/mock_purchase_dialog.dart';
+import '../widgets/store/no_offerings_message.dart';
 
+/// Store screen for purchasing credits via RevenueCat or mock purchases
+///
+/// Features:
+/// - Credits balance display
+/// - Package cards (30, 100, 250 credits)
+/// - Mock purchases (when USE_MOCK_PURCHASES = true)
+/// - Real purchases via RevenueCat (when USE_MOCK_PURCHASES = false)
+/// - Webhook polling for credit fulfillment
+/// - Restore purchases button
+///
+/// Refactored: January 2026
+/// - Extracted 5 widgets (credits header, package card, 2 dialogs, empty state)
+/// - Reduced from 768 lines to ~350 lines (54% reduction)
+/// - Eliminated 256 lines of code duplication
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
 
   @override
   State<StoreScreen> createState() => _StoreScreenState();
-}
-
-// Mock package data for development/screenshots when RevenueCat not configured
-class MockPackage {
-  final String id;
-  final String title;
-  final String description;
-  final String price;
-  final int searchCount;
-
-  MockPackage({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.price,
-    required this.searchCount,
-  });
 }
 
 class _StoreScreenState extends State<StoreScreen> {
@@ -42,38 +44,13 @@ class _StoreScreenState extends State<StoreScreen> {
   bool _isLoading = true;
   bool _isPurchasing = false;
 
-  // Mock packages for preview when RevenueCat not configured
-  // Updated for v1.2.0 variable credit system (10x multiplier)
-  final List<MockPackage> _mockPackages = [
-    MockPackage(
-      id: '3_searches',
-      title: '30 Credits',
-      description: '3-15 searches depending on type',
-      price: '\$1.99',
-      searchCount: 30,
-    ),
-    MockPackage(
-      id: '10_searches',
-      title: '100 Credits',
-      description: 'Best value - Most popular!',
-      price: '\$4.99',
-      searchCount: 100,
-    ),
-    MockPackage(
-      id: '25_searches',
-      title: '250 Credits',
-      description: 'Maximum credits for power users',
-      price: '\$9.99',
-      searchCount: 250,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  /// Load offerings and current credit balance
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
@@ -99,6 +76,12 @@ class _StoreScreenState extends State<StoreScreen> {
     });
   }
 
+  /// Handle RevenueCat package purchase
+  ///
+  /// Flow:
+  /// 1. Purchase via RevenueCat
+  /// 2. Poll for webhook to add credits (12 attempts, ~78 seconds)
+  /// 3. Show success or delayed dialog
   Future<void> _purchasePackage(Package package) async {
     setState(() => _isPurchasing = true);
 
@@ -107,116 +90,7 @@ class _StoreScreenState extends State<StoreScreen> {
     if (!mounted) return;
 
     if (result.success) {
-      // Purchase successful! Now wait for webhook to add credits
-      if (mounted) {
-        CustomSnackbar.showInfo(
-          context,
-          'Payment successful! Adding credits...',
-        );
-      }
-
-      // Retry credit refresh with delays (webhook needs time to process)
-      bool creditsAdded = false;
-      final initialCredits = _currentCredits;
-
-      // Extended timeout: 12 attempts = ~78 seconds total
-      // Progressive delays: 2s, 3s, 4s, 5s, 6s, 7s, 8s, 9s, 10s, 11s, 12s, 13s
-      for (int attempt = 0; attempt < 12; attempt++) {
-        await Future.delayed(Duration(seconds: attempt + 2));
-
-        if (!mounted) return;
-
-        // Show progress feedback every 3rd attempt
-        if (attempt > 0 && attempt % 3 == 0 && mounted) {
-          CustomSnackbar.showInfo(
-            context,
-            'Still processing... (${attempt + 1}/12)',
-          );
-        }
-
-        final newCredits = await _authService.getUserCredits();
-
-        if (newCredits > initialCredits) {
-          // Credits were added!
-          final addedCredits = newCredits - initialCredits;
-          setState(() {
-            _currentCredits = newCredits;
-            _isPurchasing = false;
-          });
-          if (mounted) {
-            CustomSnackbar.showSuccess(
-              context,
-              'Success! $addedCredits credits added! 🎉',
-            );
-          }
-          creditsAdded = true;
-
-          if (kDebugMode) {
-            print('✅ [STORE] Credits added after ${attempt + 1} attempts');
-            print('✅ [STORE] $initialCredits → $newCredits (+$addedCredits)');
-          }
-          break;
-        }
-
-        if (kDebugMode) {
-          print('🔄 [STORE] Attempt ${attempt + 1}/12: Waiting for webhook...');
-        }
-      }
-
-      if (!creditsAdded) {
-        // Webhook took too long or failed
-        setState(() => _isPurchasing = false);
-
-        if (kDebugMode) {
-          print('⚠️ [STORE] Webhook timeout after 78 seconds');
-          print('⚠️ [STORE] Purchase successful but credits not added yet');
-          print('⚠️ [STORE] User should restore purchases or wait');
-        }
-
-        if (mounted) {
-          // Show dialog with options
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.primaryPink),
-                  const SizedBox(width: 8),
-                  const Text('Purchase Completed'),
-                ],
-              ),
-              content: const Text(
-                'Your payment was successful! ✅\n\n'
-                'Credits are still being processed by Apple. This usually takes just a few moments.\n\n'
-                'What to do:\n'
-                '• Wait 1 minute and tap "Restore Now" below\n'
-                '• OR close the app and reopen - credits will appear\n'
-                '• If credits don\'t appear within 5 minutes, use the "Restore Purchases" button in Settings',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('I\'ll Wait'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await _restorePurchases();
-                  },
-                  child: Text(
-                    'Restore Now',
-                    style: TextStyle(
-                      color: AppColors.primaryPink,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-      }
+      await _handleSuccessfulPurchase();
     } else if (result.cancelled) {
       setState(() => _isPurchasing = false);
       if (mounted) {
@@ -235,6 +109,83 @@ class _StoreScreenState extends State<StoreScreen> {
     }
   }
 
+  /// Handle successful purchase - poll for webhook credits
+  Future<void> _handleSuccessfulPurchase() async {
+    if (mounted) {
+      CustomSnackbar.showInfo(
+        context,
+        'Payment successful! Adding credits...',
+      );
+    }
+
+    // Retry credit refresh with delays (webhook needs time to process)
+    bool creditsAdded = false;
+    final initialCredits = _currentCredits;
+
+    // Extended timeout: 12 attempts = ~78 seconds total
+    // Progressive delays: 2s, 3s, 4s, 5s, 6s, 7s, 8s, 9s, 10s, 11s, 12s, 13s
+    for (int attempt = 0; attempt < 12; attempt++) {
+      await Future.delayed(Duration(seconds: attempt + 2));
+
+      if (!mounted) return;
+
+      // Show progress feedback every 3rd attempt
+      if (attempt > 0 && attempt % 3 == 0 && mounted) {
+        CustomSnackbar.showInfo(
+          context,
+          'Still processing... (${attempt + 1}/12)',
+        );
+      }
+
+      final newCredits = await _authService.getUserCredits();
+
+      if (newCredits > initialCredits) {
+        // Credits were added!
+        final addedCredits = newCredits - initialCredits;
+        setState(() {
+          _currentCredits = newCredits;
+          _isPurchasing = false;
+        });
+        if (mounted) {
+          CustomSnackbar.showSuccess(
+            context,
+            'Success! $addedCredits credits added! 🎉',
+          );
+        }
+        creditsAdded = true;
+
+        if (kDebugMode) {
+          print('✅ [STORE] Credits added after ${attempt + 1} attempts');
+          print('✅ [STORE] $initialCredits → $newCredits (+$addedCredits)');
+        }
+        break;
+      }
+
+      if (kDebugMode) {
+        print('🔄 [STORE] Attempt ${attempt + 1}/12: Waiting for webhook...');
+      }
+    }
+
+    if (!creditsAdded) {
+      // Webhook took too long or failed - show delayed dialog
+      setState(() => _isPurchasing = false);
+
+      if (kDebugMode) {
+        print('⚠️ [STORE] Webhook timeout after 78 seconds');
+        print('⚠️ [STORE] Purchase successful but credits not added yet');
+        print('⚠️ [STORE] User should restore purchases or wait');
+      }
+
+      if (mounted) {
+        await PurchaseDelayedDialog.show(
+          context,
+          onRestore: _restorePurchases,
+        );
+      }
+    }
+  }
+
+  /// Restore previous purchases
   Future<void> _restorePurchases() async {
     setState(() => _isLoading = true);
 
@@ -253,33 +204,21 @@ class _StoreScreenState extends State<StoreScreen> {
     }
   }
 
-  Future<void> _purchaseMockPackage(MockPackage mockPackage) async {
-    // Show info that this is mock mode
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Purchase Credits'),
-        content: Text(
-          'Add ${mockPackage.searchCount} credits to your account for ${mockPackage.price}?\n\n'
-          'Note: This is a test purchase. Real payments require RevenueCat configuration.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Purchase',
-              style: TextStyle(color: AppColors.primaryPink),
-            ),
-          ),
-        ],
-      ),
+  /// Handle mock package purchase (for development/testing)
+  ///
+  /// Flow:
+  /// 1. Show confirmation dialog
+  /// 2. Directly add credits to database (bypass RevenueCat)
+  /// 3. Refresh credit balance
+  Future<void> _purchaseMockPackage(PurchasePackage package) async {
+    // Show confirmation dialog
+    final confirmed = await MockPurchaseDialog.show(
+      context,
+      price: package.price,
+      creditCount: package.searchCount,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _isPurchasing = true);
 
@@ -295,7 +234,7 @@ class _StoreScreenState extends State<StoreScreen> {
 
       // Manually add credits via database (for testing)
       // In production, this would be handled by RevenueCat webhook
-      await _authService.addCredits(mockPackage.searchCount);
+      await _authService.addCredits(package.searchCount);
 
       // Reload credits
       final newCredits = await _authService.getUserCredits();
@@ -308,7 +247,7 @@ class _StoreScreenState extends State<StoreScreen> {
       if (mounted) {
         CustomSnackbar.showSuccess(
           context,
-          'Successfully added ${mockPackage.searchCount} credits!',
+          'Successfully added ${package.searchCount} credits!',
         );
       }
     } catch (e) {
@@ -346,423 +285,69 @@ class _StoreScreenState extends State<StoreScreen> {
           ? LoadingWidgets.centered()
           : Column(
               children: [
-                // Credits balance
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.softPink.withValues(alpha: 0.3),
-                        Colors.white,
-                      ],
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Your Credits',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '$_currentCredits',
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryPink,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'credits available',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // Credits balance header (REFACTORED: Extracted widget)
+                CreditsBalanceHeader(currentCredits: _currentCredits),
 
-                // Packages
-                Expanded(
-                  child: AppConfig.USE_MOCK_PURCHASES
-                      ? _buildMockPackagesList()
-                      : (_offerings == null || _offerings!.current == null
-                          ? _buildNoOfferingsMessage()
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _offerings!.current!.availablePackages.length,
-                              itemBuilder: (context, index) {
-                                final package = _offerings!.current!.availablePackages[index];
-                                return _buildPackageCard(package);
-                              },
-                            )),
-                ),
+                // Package list
+                Expanded(child: _buildPackagesList()),
               ],
             ),
     );
   }
 
+  /// Build packages list based on mock or real mode
+  Widget _buildPackagesList() {
+    if (AppConfig.USE_MOCK_PURCHASES) {
+      // Mock packages for development/testing
+      return _buildMockPackagesList();
+    }
+
+    if (_offerings == null || _offerings!.current == null) {
+      // No offerings available - show empty state
+      return NoOfferingsMessage(
+        onRetry: _loadData,
+        showDebugInfo: AppConfig.DEBUG_PURCHASES,
+      );
+    }
+
+    // Real RevenueCat packages
+    return _buildRevenueCatPackagesList();
+  }
+
+  /// Build list of mock packages
   Widget _buildMockPackagesList() {
+    final mockPackages = PurchasePackage.getMockPackages();
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _mockPackages.length,
+      itemCount: mockPackages.length,
       itemBuilder: (context, index) {
-        final mockPackage = _mockPackages[index];
-        return _buildMockPackageCard(mockPackage);
+        final package = mockPackages[index];
+        return StorePackageCard(
+          package: package,
+          onPurchase: () => _purchaseMockPackage(package),
+          isPurchasing: _isPurchasing,
+        );
       },
     );
   }
 
-  Widget _buildMockPackageCard(MockPackage mockPackage) {
-    final isBestValue = mockPackage.id == '10_searches';
+  /// Build list of RevenueCat packages
+  Widget _buildRevenueCatPackagesList() {
+    final packages = _offerings!.current!.availablePackages;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: isBestValue
-            ? Border.all(color: AppColors.primaryPink, width: 2)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryPink.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Best Value badge
-          if (isBestValue)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryPink, AppColors.deepPink],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(14),
-                    bottomLeft: Radius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'BEST VALUE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Icon
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primaryPink.withValues(alpha: 0.2),
-                            AppColors.softPink.withValues(alpha: 0.2),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.search,
-                        color: AppColors.primaryPink,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-
-                    // Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            mockPackage.title,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            mockPackage.description,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            mockPackage.price,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryPink,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Purchase button
-                SizedBox(
-                  width: double.infinity,
-                  child: _isPurchasing
-                      ? LoadingWidgets.centered()
-                      : CustomButton(
-                          text: 'Purchase',
-                          onPressed: () => _purchaseMockPackage(mockPackage),
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPackageCard(Package package) {
-    final product = package.storeProduct;
-    final isBestValue = package.identifier == 'ten_searches';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: isBestValue
-            ? Border.all(color: AppColors.primaryPink, width: 2)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryPink.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Best Value badge
-          if (isBestValue)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryPink, AppColors.deepPink],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(14),
-                    bottomLeft: Radius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'BEST VALUE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Icon
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primaryPink.withValues(alpha: 0.2),
-                            AppColors.softPink.withValues(alpha: 0.2),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.search,
-                        color: AppColors.primaryPink,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-
-                    // Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.title,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            product.description,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            product.priceString,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryPink,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Purchase button
-                SizedBox(
-                  width: double.infinity,
-                  child: _isPurchasing
-                      ? LoadingWidgets.centered()
-                      : CustomButton(
-                          text: 'Purchase',
-                          onPressed: () => _purchasePackage(package),
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoOfferingsMessage() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.store_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Products Available',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'RevenueCat offerings could not be loaded.\nPlease check your configuration.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPink,
-                foregroundColor: Colors.white,
-              ),
-            ),
-            if (AppConfig.DEBUG_PURCHASES) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Debug Mode',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange[900],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Set USE_MOCK_PURCHASES = true in AppConfig\n'
-                      'to test without RevenueCat configuration.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[900],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: packages.length,
+      itemBuilder: (context, index) {
+        final rcPackage = packages[index];
+        final package = PurchasePackage.fromRevenueCat(rcPackage);
+        return StorePackageCard(
+          package: package,
+          onPurchase: () => _purchasePackage(rcPackage),
+          isPurchasing: _isPurchasing,
+        );
+      },
     );
   }
 }
-
